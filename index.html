@@ -903,8 +903,14 @@ async function buildPdfBytes(){
   const {map,order}=colorMap(); const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const cnt=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0); return [toHex(map[cd]),`${cd}  ${m?.desc||""}${cnt?` (${cnt})`:""}`]; });
   items.push(["#3e4a5c","Operator"],["#efeee9","Manual / helper table"]);
   const legW=Math.min(AW,Math.max(widest*sc,640)), legX=M+(AW-legW)/2, per=Math.max(3,Math.floor(legW/270)), cw=legW/per, legRows=Math.ceil(items.length/per), legH=18+legRows*16;
-  // line summary at the top of page 1, aligned with the layout
-  need(100); heading("Line summary",legX);
+  // page 1: every block centred on the page; whole-line modes also share the spare height evenly above and below
+  const hc=(t,sz=12)=>M+(AW-FB.widthOfTextAtSize(safe(t),sz))/2;
+  const mTableW=70+300+90+90, mRows=new Set(R.ops.map(o=>o.code)).size+1;
+  if(mode!=="strips"){
+    const blockH=96 + 28 + (stripH+22) + (legH+10) + (24+15*(mRows+1)+16);
+    const avail=y-(M+18); if(avail>blockH) y-=(avail-blockH)/2;
+  }
+  need(100); heading("Line summary",hc("Line summary"));
   const k=[["Total SMV",R.totalSMV.toFixed(2),"min per garment"],["Takt time",R.takt.toFixed(3),"min per piece"],
     ["Operators",String(R.totalOps),"on the line"],["Machines",String(R.totalMc),`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
     ["Target output",String(I.target),`pcs/day · ${Math.round(I.target/I.hours)} pcs/h`],["Efficiency",Math.round(I.eff*100)+"%","planned line efficiency"]];
@@ -915,7 +921,7 @@ async function buildPdfBytes(){
     text(l,x+8,y-14,{size:8,color:INK2}); text(v,x+8,y-34,{size:17,bold:true,color:INK});
     text(fit(sub,kw-14,7),x+8,y-48,{size:7,color:INK3}); });
   y-=72;
-  y-=4; heading(headTxt, mode==="strips"?M:M+(AW-widest*sc)/2);
+  y-=4; heading(headTxt, hc(headTxt));
   for(let i=0;i<n;i++){
     need(stripH+18);
     const chunk=cuts[i+1]-cuts[i], iw=chunk*sc, ix=M+(AW-iw)/2;
@@ -929,18 +935,18 @@ async function buildPdfBytes(){
   }
   // legend
   need(legH);
-  text("Legend",legX,y-10,{size:9,bold:true}); y-=18;
+  text("Legend",M+(AW-FB.widthOfTextAtSize("Legend",9))/2,y-10,{size:9,bold:true}); y-=18;
   items.forEach(([c,t],i)=>{ const x=legX+(i%per)*cw, yy=y-Math.floor(i/per)*16;
     page.drawRectangle({x,y:yy-9,width:14,height:10,color:hex(c),opacity:i<order.length?0.35:1,borderColor:hex(c),borderWidth:1.2});
     text(fit(t,cw-24,8),x+20,yy-7,{size:8,color:INK2}); });
   y-=legRows*16+10;
 
-  need(80); heading("Machine requirement",legX);
+  need(80); heading("Machine requirement",hc("Machine requirement"));
   const by={}; R.ops.forEach(o=>{ (by[o.code] ||= {mc:0,op:0,smv:0}); by[o.code].mc+=o.machines; by[o.code].op+=o.operators; by[o.code].smv+=o.smv; });
   const mcols=[["Code",70,"l"],["Description",300,"l"],["Machines",90,"r"],["Operators",90,"r"]];
   const mrows=order.filter(cd=>by[cd]).map(cd=>[cd,data.machines.find(x=>x.code===cd)?.desc||"",by[cd].mc,by[cd].op]);
   mrows.push(["Total","",R.totalMc,R.totalOps]);
-  TX=legX; drawTable(mcols,mrows,(r,i)=>i===mrows.length-1?{bold:true}:{}); TX=M;
+  TX=M+(AW-mTableW)/2; drawTable(mcols,mrows,(r,i)=>i===mrows.length-1?{bold:true}:{}); TX=M;
 
   // further pages: balance chart, then the operation breakdown
   newPage();
