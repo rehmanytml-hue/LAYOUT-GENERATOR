@@ -674,7 +674,7 @@ function buildVsdxParts(R){
   // title block
   const bn=R.bn.map(o=>o.no).join(", ");
   out.push(text(AX(20),AY(48),AX(Wpx-40),AX(34),`${I.lineName||"Line layout"}${I.style?" – "+I.style:""}${I.buyer?" · "+I.buyer:""}`,{pt:16,bold:true,align:0,name:"Title"}));
-  out.push(text(AX(20),AY(80),AX(Wpx-40),AX(28),`${type} layout · ${$("orient").selectedOptions[0].text} · Target ${I.target} pcs/day · ${I.hours} h · Eff ${Math.round(I.eff*100)}% · Total SMV ${R.totalSMV.toFixed(2)} · Takt ${R.takt.toFixed(3)} min · Operators ${R.totalOps} · Machines ${R.totalMc} · Balance ${(R.balEff*100).toFixed(1)}%`,{pt:9,align:0,color:"#52514E",name:"Summary"}));
+  out.push(text(AX(20),AY(80),AX(Wpx-40),AX(28),`${type} layout · ${$("orient").selectedOptions[0].text} · Target ${I.target} pcs/day · ${I.hours} h · Eff ${Math.round(I.eff*100)}% · Total SMV ${R.totalSMV.toFixed(2)} · Takt ${R.takt.toFixed(3)} min · Operators ${R.totalOps} · Machines ${R.totalMc}`,{pt:9,align:0,color:"#52514E",name:"Summary"}));
   const T=y=>TOP+y; // layout px y → page px y
   // work table
   const tabX1=LM-50, tabX2=LM+maxX+50;
@@ -905,15 +905,14 @@ async function buildPdfBytes(){
   const legW=Math.min(AW,Math.max(widest*sc,640)), legX=M+(AW-legW)/2, per=Math.max(3,Math.floor(legW/270)), cw=legW/per, legRows=Math.ceil(items.length/per), legH=18+legRows*16;
   // line summary at the top of page 1, aligned with the layout
   need(100); heading("Line summary",legX);
-  const k=[["Total SMV",R.totalSMV.toFixed(2),"min per garment"],["Takt time",R.takt.toFixed(3),`required cycle ${R.req.toFixed(3)} min`],
-    ["Operators",String(R.totalOps),`theoretical ${R.theoMP.toFixed(1)}`],["Machines",String(R.totalMc),`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
-    ["Theoretical MP",R.theoMP.toFixed(1),"SMV x target / (available min x eff.)"],
-    ["Line balance",(R.balEff*100).toFixed(1)+"%","SMV / (operators x longest cycle)"],["Expected output",Math.floor(R.outHr)+"/h",`${Math.floor(R.outDay)} per day vs ${I.target}`]];
+  const k=[["Total SMV",R.totalSMV.toFixed(2),"min per garment"],["Takt time",R.takt.toFixed(3),"min per piece"],
+    ["Operators",String(R.totalOps),"on the line"],["Machines",String(R.totalMc),`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
+    ["Target output",String(I.target),`pcs/day · ${Math.round(I.target/I.hours)} pcs/h`],["Efficiency",Math.round(I.eff*100)+"%","planned line efficiency"]];
   need(64);
-  const kw=(legW-6*8)/7;
+  const kw=(legW-(k.length-1)*8)/k.length;
   k.forEach(([l,v,sub],i)=>{ const x=legX+i*(kw+8);
     page.drawRectangle({x,y:y-56,width:kw,height:56,borderColor:LINE,borderWidth:0.75,color:hex("#fcfcfb")});
-    text(l,x+8,y-14,{size:8,color:INK2}); text(v,x+8,y-34,{size:17,bold:true,color:(l==="Expected output"&&R.outDay<I.target)?CRIT:INK});
+    text(l,x+8,y-14,{size:8,color:INK2}); text(v,x+8,y-34,{size:17,bold:true,color:INK});
     text(fit(sub,kw-14,7),x+8,y-48,{size:7,color:INK3}); });
   y-=72;
   y-=4; heading(headTxt, mode==="strips"?M:M+(AW-widest*sc)/2);
@@ -950,14 +949,14 @@ async function buildPdfBytes(){
   const cdiv=document.createElement("div"); cdiv.style.cssText="position:absolute;left:-99999px;top:0"; cdiv.appendChild(csvg); document.body.appendChild(cdiv);
   const Cc=await svgToCanvas(csvg,2.5); cdiv.remove();
   const cimg=await doc.embedPng(await canvasPng(Cc.canvas)); const cwid=Math.min(AW,Cc.w*1.3), chh=Cc.h*cwid/Cc.w;
-  heading("Line balance – cycle time per operator vs required cycle");
+  heading("Cycle time per operator vs required cycle");
   page.drawImage(cimg,{x:M,y:y-chh,width:cwid,height:chh}); y-=chh+20;
   // operation breakdown
   need(150); heading("Operation breakdown");
-  const ocols=[["Op",36,"r"],["Section",86,"l"],["Operation",300,"l"],["M/C",56,"l"],["SMV",56,"r"],["Theo MP",62,"r"],["Operators",64,"r"],["Machines",64,"r"],["Cycle",62,"r"],["Cap/h",64,"r"],["Load %",64,"r"]];
-  const orows=R.ops.map(o=>[o.no,o.section,o.name,o.code,o.smv.toFixed(2),o.theo.toFixed(2),o.operators+(o.autoOps?"*":""),o.machines,isFinite(o.cycle)?o.cycle.toFixed(3):"-",Math.floor(o.cap),Math.round(o.load*100)]);
+  const ocols=[["Op",36,"r"],["Section",86,"l"],["Operation",300,"l"],["M/C",56,"l"],["SMV",62,"r"],["Operators",70,"r"],["Machines",64,"r"],["Cycle",62,"r"],["Cap/h",64,"r"],["Load %",64,"r"]];
+  const orows=R.ops.map(o=>[o.no,o.section,o.name,o.code,o.smv.toFixed(2),o.operators+(o.autoOps?"*":""),o.machines,isFinite(o.cycle)?o.cycle.toFixed(3):"-",Math.floor(o.cap),Math.round(o.load*100)]);
   drawTable(ocols,orows,()=>({}));
-  need(30); text("Required cycle = takt time x planned efficiency. Line balance = total SMV / (operators x longest cycle). * = operators allocated automatically.",M,y-10,{size:7.5,color:INK3});
+  need(30); text("Required cycle = takt time x planned efficiency. * = operators allocated automatically.",M,y-10,{size:7.5,color:INK3});
 
   function drawTable(cols,rows,style){
     const rh=15, head=()=>{ need(rh*2); let x=TX; page.drawRectangle({x:TX,y:y-rh,width:cols.reduce((a,c)=>a+c[1],0),height:rh,color:hex("#efeee9")});
