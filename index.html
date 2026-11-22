@@ -581,10 +581,10 @@ function drawTables(R){
   t+=`</tbody>`; $("optable").innerHTML=t;
   const by={}; R.ops.forEach(o=>{ (by[o.code] ||= {mc:0,op:0,smv:0}); by[o.code].mc+=o.machines; by[o.code].op+=o.operators; by[o.code].smv+=o.smv; });
   const {map,order}=colorMap();
-  let m=`<thead><tr><th>Code</th><th>Description</th><th class="n">Machines</th><th class="n">Operators</th><th class="n">SMV</th></tr></thead><tbody>`;
+  let m=`<thead><tr><th>Code</th><th>Description</th><th class="n">Machines</th><th class="n">Operators</th></tr></thead><tbody>`;
   order.forEach(cd=>{ const d=data.machines.find(x=>x.code===cd); const b=by[cd]; if(!b) return;
-    m+=`<tr><td><i class="sw" style="border-color:${map[cd]};width:10px;height:10px;vertical-align:-1px;margin-right:6px"></i><span class="mono">${esc(cd)}</span></td><td>${esc(d?.desc||"")}</td><td class="n">${b.mc}</td><td class="n">${b.op}</td><td class="n">${fmt(b.smv)}</td></tr>`; });
-  m+=`<tr><td><b>Total</b></td><td></td><td class="n"><b>${R.totalMc}</b></td><td class="n"><b>${R.totalOps}</b></td><td class="n"><b>${fmt(R.totalSMV)}</b></td></tr></tbody>`;
+    m+=`<tr><td><i class="sw" style="border-color:${map[cd]};width:10px;height:10px;vertical-align:-1px;margin-right:6px"></i><span class="mono">${esc(cd)}</span></td><td>${esc(d?.desc||"")}</td><td class="n">${b.mc}</td><td class="n">${b.op}</td></tr>`; });
+  m+=`<tr><td><b>Total</b></td><td></td><td class="n"><b>${R.totalMc}</b></td><td class="n"><b>${R.totalOps}</b></td></tr></tbody>`;
   $("mtable").innerHTML=m;
 }
 function drawDetail(R){
@@ -930,49 +930,37 @@ async function buildPdfBytes(){
   need(100); heading("Line summary",legX);
   const k=[["Total SMV",R.totalSMV.toFixed(2),"min per garment"],["Takt time",R.takt.toFixed(3),`required cycle ${R.req.toFixed(3)} min`],
     ["Operators",String(R.totalOps),`theoretical ${R.theoMP.toFixed(1)}`],["Machines",String(R.totalMc),`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
-    ["Bottleneck",R.bnCycle.toFixed(3),R.bn.length>1?`${R.bn.length} ops tie: Op ${R.bn.slice(0,3).map(o=>o.no).join(", ")}${R.bn.length>3?"...":""}`:`Op ${R.bn[0].no} – ${R.bn[0].name}`],
-    ["Line balance",(R.balEff*100).toFixed(1)+"%","SMV / (operators x BN cycle)"],["Expected output",Math.floor(R.outHr)+"/h",`${Math.floor(R.outDay)} per day vs ${I.target}`]];
+    ["Theoretical MP",R.theoMP.toFixed(1),"SMV x target / (available min x eff.)"],
+    ["Line balance",(R.balEff*100).toFixed(1)+"%","SMV / (operators x longest cycle)"],["Expected output",Math.floor(R.outHr)+"/h",`${Math.floor(R.outDay)} per day vs ${I.target}`]];
   need(64);
   const kw=(legW-6*8)/7;
   k.forEach(([l,v,sub],i)=>{ const x=legX+i*(kw+8);
     page.drawRectangle({x,y:y-56,width:kw,height:56,borderColor:LINE,borderWidth:0.75,color:hex("#fcfcfb")});
-    text(l,x+8,y-14,{size:8,color:INK2}); text(v,x+8,y-34,{size:17,bold:true,color:(l==="Bottleneck"&&R.bnCycle>R.req)||(l==="Expected output"&&R.outDay<I.target)?CRIT:INK});
+    text(l,x+8,y-14,{size:8,color:INK2}); text(v,x+8,y-34,{size:17,bold:true,color:(l==="Expected output"&&R.outDay<I.target)?CRIT:INK});
     text(fit(sub,kw-14,7),x+8,y-48,{size:7,color:INK3}); });
   y-=72;
   need(80); heading("Machine requirement",legX);
   const by={}; R.ops.forEach(o=>{ (by[o.code] ||= {mc:0,op:0,smv:0}); by[o.code].mc+=o.machines; by[o.code].op+=o.operators; by[o.code].smv+=o.smv; });
-  const mcols=[["Code",70,"l"],["Description",280,"l"],["Machines",80,"r"],["Operators",80,"r"],["SMV",80,"r"]];
-  const mrows=order.filter(cd=>by[cd]).map(cd=>[cd,data.machines.find(x=>x.code===cd)?.desc||"",by[cd].mc,by[cd].op,by[cd].smv.toFixed(2)]);
-  mrows.push(["Total","",R.totalMc,R.totalOps,R.totalSMV.toFixed(2)]);
+  const mcols=[["Code",70,"l"],["Description",300,"l"],["Machines",90,"r"],["Operators",90,"r"]];
+  const mrows=order.filter(cd=>by[cd]).map(cd=>[cd,data.machines.find(x=>x.code===cd)?.desc||"",by[cd].mc,by[cd].op]);
+  mrows.push(["Total","",R.totalMc,R.totalOps]);
   TX=legX; drawTable(mcols,mrows,(r,i)=>i===mrows.length-1?{bold:true}:{}); TX=M;
 
   // further pages: balance chart, then the operation breakdown
   newPage();
-  const csvg=$("chart").querySelector("svg"); const Cc=await svgToCanvas(csvg,2.5);
+  const csvg=$("chart").querySelector("svg").cloneNode(true);
+  csvg.querySelectorAll('[fill="var(--crit)"]').forEach(e=>{ if(e.tagName==="text") e.remove(); else e.setAttribute("fill","var(--s1)"); });
+  const cdiv=document.createElement("div"); cdiv.style.cssText="position:absolute;left:-99999px;top:0"; cdiv.appendChild(csvg); document.body.appendChild(cdiv);
+  const Cc=await svgToCanvas(csvg,2.5); cdiv.remove();
   const cimg=await doc.embedPng(await canvasPng(Cc.canvas)); const cwid=Math.min(AW,Cc.w*1.3), chh=Cc.h*cwid/Cc.w;
   heading("Line balance – cycle time per operator vs required cycle");
   page.drawImage(cimg,{x:M,y:y-chh,width:cwid,height:chh}); y-=chh+20;
-  // bottleneck & balancing suggestions (separate from the layout)
-  const A=balanceAdvice(R);
-  const wrapPdf=(t,w,sz,f=F)=>{ const words=safe(t).split(" "), lines=[]; let cur="";
-    words.forEach(wd=>{ const tr=cur?cur+" "+wd:wd; if(f.widthOfTextAtSize(tr,sz)<=w) cur=tr; else { if(cur) lines.push(cur); cur=wd; } }); if(cur) lines.push(cur); return lines; };
-  need(60); heading("Bottleneck & balancing suggestions");
-  wrapPdf(A.summary,AW,9).forEach(l=>{ need(13); text(l,M,y-10,{size:9,color:INK2}); y-=13; }); y-=6;
-  A.items.forEach(it=>{
-    const col=it.level==="info"?INK3:CRIT, tl=wrapPdf(it.title,AW-16,9.5,FB), dl=wrapPdf(it.detail,AW-16,8.5), al=it.acts.map(a=>wrapPdf(a,AW-30,8.5));
-    const h=tl.length*13+dl.length*12+al.reduce((a,l)=>a+l.length*12,0)+10; need(Math.min(h,200));
-    const top=y; tl.forEach(l=>{ text(l,M+10,y-10,{size:9.5,bold:true}); y-=13; }); dl.forEach(l=>{ text(l,M+10,y-10,{size:8.5,color:INK2}); y-=12; });
-    al.forEach(ls=>ls.forEach((l,j)=>{ need(12); if(j===0) text("-",M+14,y-10,{size:8.5}); text(l,M+22,y-10,{size:8.5}); y-=12; }));
-    page.drawRectangle({x:M,y:y-2,width:2.5,height:Math.max(8,top-y),color:col}); y-=10;
-  });
-  y-=6;
-
   // operation breakdown
   need(150); heading("Operation breakdown");
-  const ocols=[["Op",36,"r"],["Section",86,"l"],["Operation",250,"l"],["M/C",56,"l"],["SMV",56,"r"],["Theo MP",62,"r"],["Operators",64,"r"],["Machines",64,"r"],["Cycle",62,"r"],["Cap/h",56,"r"],["Load %",56,"r"],["Status",130,"l"]];
-  const orows=R.ops.map(o=>[o.no,o.section,o.name,o.code,o.smv.toFixed(2),o.theo.toFixed(2),o.operators+(o.autoOps?"*":""),o.machines,isFinite(o.cycle)?o.cycle.toFixed(3):"-",Math.floor(o.cap),Math.round(o.load*100),R.bn.includes(o)?"Bottleneck":o.load>1.0001?"Over required cycle":"OK"]);
-  drawTable(ocols,orows,(r)=>r[11]!=="OK"?{statusColor:CRIT}:{});
-  need(30); text("Required cycle = takt time x planned efficiency. Line balance = total SMV / (operators x bottleneck cycle). * = operators allocated automatically.",M,y-10,{size:7.5,color:INK3});
+  const ocols=[["Op",36,"r"],["Section",86,"l"],["Operation",300,"l"],["M/C",56,"l"],["SMV",56,"r"],["Theo MP",62,"r"],["Operators",64,"r"],["Machines",64,"r"],["Cycle",62,"r"],["Cap/h",64,"r"],["Load %",64,"r"]];
+  const orows=R.ops.map(o=>[o.no,o.section,o.name,o.code,o.smv.toFixed(2),o.theo.toFixed(2),o.operators+(o.autoOps?"*":""),o.machines,isFinite(o.cycle)?o.cycle.toFixed(3):"-",Math.floor(o.cap),Math.round(o.load*100)]);
+  drawTable(ocols,orows,()=>({}));
+  need(30); text("Required cycle = takt time x planned efficiency. Line balance = total SMV / (operators x longest cycle). * = operators allocated automatically.",M,y-10,{size:7.5,color:INK3});
 
   function drawTable(cols,rows,style){
     const rh=15, head=()=>{ need(rh*2); let x=TX; page.drawRectangle({x:TX,y:y-rh,width:cols.reduce((a,c)=>a+c[1],0),height:rh,color:hex("#efeee9")});
