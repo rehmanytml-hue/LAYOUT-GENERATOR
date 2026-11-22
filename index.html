@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stitching Line Layout Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f4f3ef; --surface:#fcfcfb; --surface-2:#efeee9; --line:#dcdad3; --grid:#e8e6df;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#8a8983;
+  --accent:#1f3a5f; --accent-ink:#ffffff;
+  --crit:#c62828; --warn:#b26a00; --good:#2e7d32;
+  --table:#e6e1d3; --table-stroke:#bdb6a2;
+  --mach:#dedbd2; --fabric:#9db7d8; --skin:#c99a74; --hair:#2f2a26; --shirt:#3e4a5c;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#6250d6; --s8:#e34948; --neutral:#8a8983;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --bg:#121211; --surface:#1a1a19; --surface-2:#232321; --line:#34332f; --grid:#262624;
+    --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#8f8e86;
+    --accent:#8fb4e6; --accent-ink:#0b0b0b;
+    --crit:#ef6b6b; --warn:#e0a03a; --good:#5cbf60;
+    --table:#2e2b24; --table-stroke:#4d4839;
+    --mach:#55534c; --fabric:#5a77a0; --skin:#b98962; --hair:#0e0d0c; --shirt:#8391a8;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767; --neutral:#8f8e86;
+  }
+}
+:root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#121211; --surface:#1a1a19; --surface-2:#232321; --line:#34332f; --grid:#262624;
+    --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#8f8e86;
+    --accent:#8fb4e6; --accent-ink:#0b0b0b;
+    --crit:#ef6b6b; --warn:#e0a03a; --good:#5cbf60;
+    --table:#2e2b24; --table-stroke:#4d4839;
+    --mach:#55534c; --fabric:#5a77a0; --skin:#b98962; --hair:#0e0d0c; --shirt:#8391a8;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767; --neutral:#8f8e86;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.45}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+header{padding:20px 20px 8px;max-width:1400px;margin:0 auto;position:relative}
+.theme{float:right;display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2);margin-left:12px}
+.theme button{font:inherit;font-size:12px;border:0;background:transparent;color:var(--ink-2);padding:6px 10px;cursor:pointer}
+.theme button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.theme button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+header h1{margin:0;font-size:22px;letter-spacing:-.01em}
+header p{margin:4px 0 0;color:var(--ink-2)}
+main{max-width:1400px;margin:0 auto;padding:8px 20px 40px;display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card h2{margin:0 0 10px;font-size:15px;font-weight:600}
+.card h2 small{font-weight:400;color:var(--ink-3);margin-left:6px}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2)}
+.field input,.field select{font:inherit;font-size:14px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
+.field input[type=number]{width:110px}
+.btn{font:inherit;font-weight:500;border-radius:6px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);padding:8px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:focus-visible,.field input:focus-visible,.field select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;flex:1 1 320px}
+.drop.over{border-color:var(--accent);background:var(--surface-2)}
+.drop .src{color:var(--ink-2);font-size:13px}
+.msgs{margin-top:10px;display:grid;gap:4px;font-size:13px}
+.msg{padding:6px 10px;border-radius:6px;background:var(--surface-2);border-left:3px solid var(--warn)}
+.msg.err{border-left-color:var(--crit)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+.kpi .l{font-size:12px;color:var(--ink-2)}
+.kpi .v{font-size:24px;font-weight:600;font-family:"IBM Plex Mono",monospace;letter-spacing:-.02em}
+.kpi .s{font-size:12px;color:var(--ink-3)}
+.kpi.bad .v{color:var(--crit)}
+.layout-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px;-webkit-overflow-scrolling:touch}
+.layout-wrap svg{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{overflow:visible}
+.sw{width:14px;height:14px;border-radius:3px;border:2px solid;display:inline-block}
+.row2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px}
+main>*,.row2>*{min-width:0}
+@media (max-width:900px){.row2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:600px){header,main{padding-left:12px;padding-right:12px}.card{padding:12px}.zoom{margin-left:0}}
+.detail dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
+.detail dt{color:var(--ink-2)}
+.detail dd{margin:0;font-family:"IBM Plex Mono",monospace}
+.detail .empty{color:var(--ink-3)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-weight:600;color:var(--ink-2);background:var(--surface-2);position:sticky;top:0}
+td.n,th.n{text-align:right;font-family:"IBM Plex Mono",monospace}
+.tscroll{overflow:auto;max-height:480px;border:1px solid var(--line);border-radius:8px}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600}
+.tag.over{color:var(--crit)}
+.tag.bn{color:var(--crit)}
+.tag.ok{color:var(--ink-3);font-weight:400}
+.station{cursor:pointer}
+.station:focus{outline:none}
+.station:focus .mbox,.station.sel .mbox{stroke-width:3}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--surface);padding:6px 9px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .1s;z-index:10;max-width:240px}
+.zoom{display:flex;gap:6px;align-items:center;margin-left:auto}
+.foot{color:var(--ink-3);font-size:12px}
+.adv-sum{margin:0 0 10px;color:var(--ink-2)}
+.adv{border-left:3px solid var(--line);padding:8px 12px;margin:8px 0;background:var(--surface-2);border-radius:0 6px 6px 0}
+.adv.bn,.adv.over{border-left-color:var(--crit)}
+.adv-t{font-weight:600}
+.adv-i{display:inline-block;width:16px;color:var(--ink-2)}
+.adv.bn .adv-i,.adv.over .adv-i{color:var(--crit)}
+.adv-d{color:var(--ink-2);font-size:13px;margin-top:2px}
+.adv ul{margin:6px 0 0;padding-left:20px;font-size:13px}
+.adv li{margin:2px 0}
+.anim .hands{animation:sew .45s ease-in-out infinite alternate}
+@keyframes sew{from{transform:translateX(-1.3px)}to{transform:translateX(1.3px)}}
+.anim .needle{animation:blink .3s steps(2) infinite}
+@keyframes blink{50%{opacity:.2}}
+.anim .fabric{animation:feed 2.4s linear infinite alternate}
+@keyframes feed{from{transform:translateX(2.5px)}to{transform:translateX(-2.5px)}}
+.anim .steam{animation:steam 1.6s ease-in-out infinite}
+@keyframes steam{0%{opacity:0;transform:translateY(2px)}50%{opacity:1}100%{opacity:0;transform:translateY(-3px)}}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);padding-bottom:8px}
+.lhead{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.lhead h2{margin:0}
+.gen{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vstat{font-size:12px;color:var(--ink-2)}
+.pdfsel{font:inherit;font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:7px 8px}
+.btn:disabled{opacity:.6;cursor:progress}
+</style>
+</head>
+<body>
+<header>
+  <div class="theme" role="group" aria-label="Colour theme"><button data-t="auto">Auto</button><button data-t="light">☀ Light</button><button data-t="dark">☾ Dark</button></div>
+  <h1>Stitching Line Layout Builder</h1>
+  <p>Load an Excel file with your operations, manpower and machines to draw the line layout and check the balance.</p>
+</header>
+<main>
+  <section class="card">
+    <div class="toolbar">
+      <div class="drop" id="drop">
+        <input type="file" id="file" accept=".xlsx,.xls,.xlsm,.csv" hidden>
+        <button class="btn primary" id="pick">Load Excel file</button>
+        <button class="btn" id="sample">Use sample data</button>
+        <a class="btn" id="tpl" href="Stitching_Line_Layout_Template.xlsx" download hidden>Excel template</a>
+        <span class="src" id="src">Showing: built-in sample (men's polo shirt)</span>
+      </div>
+    </div>
+    <div class="toolbar" style="margin-top:12px">
+      <label class="field">Layout type
+        <select id="ltype"><option>Two-sided</option><option>U-shape</option><option>Single row</option></select></label>
+      <label class="field">Operator orientation
+        <select id="orient"><option value="facing">Facing conveyor</option><option value="back">Back to conveyor</option><option value="side">Side-on (90°)</option></select></label>
+      <label class="field">Far-side stations
+        <select id="farside"><option value="same">Same direction as near side</option><option value="mirror">Mirrored (rows face each other)</option></select></label>
+      <label class="field">Target (pcs/day)<input type="number" id="target" min="1"></label>
+      <label class="field">Hours / day<input type="number" id="hours" min="0.5" step="0.5"></label>
+      <label class="field">Efficiency (%)<input type="number" id="eff" min="1" max="100"></label>
+      <label class="field">Station label
+        <select id="lbl"><option value="code">Machine code</option><option value="cycle">Cycle time</option></select></label>
+      <label class="chk"><input type="checkbox" id="opnames" checked> Operation names</label>
+      <label class="chk"><input type="checkbox" id="secgap"> Gap between sections</label>
+      <label class="chk"><input type="checkbox" id="flags"> Balance flags on layout</label>
+      <label class="chk"><input type="checkbox" id="animchk"> Animation</label>
+      <div class="zoom"><button class="btn" id="zout" aria-label="Zoom out">−</button><span class="mono" id="zv">100%</span><button class="btn" id="zin" aria-label="Zoom in">+</button></div>
+    </div>
+    <div class="msgs" id="msgs"></div>
+  </section>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="card">
+    <div class="lhead"><h2 id="ltitle">Line layout</h2><div class="gen"><button class="btn primary" id="visio">Generate Visio layout</button><select id="pdfmode" class="pdfsel" aria-label="PDF layout"><option value="one">PDF: whole line on one page (A3–A0)</option><option value="a3">PDF: whole line shrunk to one A3</option><option value="strips">PDF: split into strips (A3)</option></select><button class="btn" id="pdfbtn">Download PDF</button><span id="vstat" class="vstat">Visio: editable .vsdx (inside a .zip) · PDF: A3 report</span></div></div>
+    <div class="layout-wrap" id="lwrap"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <div class="row2">
+    <section class="card">
+      <h2>Line balance <small>cycle time per operator vs. required cycle</small></h2>
+      <div style="overflow:auto"><div id="chart"></div></div>
+    </section>
+    <section class="card detail">
+      <h2>Station details</h2>
+      <div id="detail"><p class="empty">Tap a station in the layout or a bar in the chart.</p></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Bottleneck &amp; balancing suggestions <small>kept separate from the layout drawing and its exports</small></h2>
+    <div id="advice"></div>
+  </section>
+
+  <div class="row2">
+    <section class="card">
+      <h2>Operation breakdown</h2>
+      <div class="tscroll"><table id="optable"></table></div>
+    </section>
+    <section class="card">
+      <h2>Machine requirement</h2>
+      <div class="tscroll"><table id="mtable"></table></div>
+    </section>
+  </div>
+  <p class="foot">Required cycle = takt time × planned efficiency. A station is flagged when its cycle time per operator (SMV ÷ operators) exceeds it. Line balance efficiency = total SMV ÷ (operators × bottleneck cycle).</p>
+</main>
+<div id="tip"></div>
+
+<script>
+/* ---------------- sample data (same as the Excel template) ---------------- */
+const SAMPLE = {
+  info:{lineName:"Line 07",style:"Men's Polo Shirt – PS-2245",buyer:"Example Buyer",target:1200,hours:8,eff:0.75,layout:"Two-sided"},
+  machines:[
+    ["SNLS","Single Needle Lock Stitch","Sewing"],["OL4","4-Thread Overlock","Sewing"],["FL","Flatlock","Sewing"],
+    ["CS","Coverstitch / Bottom Hem","Sewing"],["BH","Buttonhole Machine","Special"],["BS","Button Stitch Machine","Special"],
+    ["FUS","Fusing Machine","Special"],["IRON","Iron / Pressing Table","Finishing"],["MAN","Manual Table (helper / trim / check)","Manual"]
+  ].map(([code,desc,cat])=>({code,desc,cat,color:""})),
+  ops:[
+    ["Front","Placket fusing","FUS",0.25],["Front","Placket marking & notch","MAN",0.30],["Front","Placket attach to front","SNLS",0.75],
+    ["Front","Placket box tack & cut","SNLS",0.55],["Front","Placket edge topstitch","SNLS",0.60],["Back","Main label attach to back","SNLS",0.30],
+    ["Collar","Collar trim & mark","MAN",0.20],["Assembly","Shoulder join","OL4",0.40],["Assembly","Shoulder tape topstitch","SNLS",0.45],
+    ["Assembly","Collar attach","SNLS",0.70],["Assembly","Collar close & placket finish","SNLS",0.80],["Assembly","Neck tape attach","SNLS",0.65],
+    ["Assembly","Neck tape topstitch","SNLS",0.55],["Sleeve","Sleeve hem","CS",0.35],["Sleeve","Sleeve attach","OL4",0.65],
+    ["Sleeve","Armhole topstitch","FL",0.55],["Assembly","Side seam & sleeve close","OL4",0.85],["Assembly","Side vent stitch","SNLS",0.60],
+    ["Assembly","Care label insert","SNLS",0.25],["Assembly","Bottom hem","CS",0.50],["Finishing","Buttonhole","BH",0.40],
+    ["Finishing","Button attach","BS",0.45],["Finishing","Thread trimming","MAN",0.60],["Finishing","Inline inspection","MAN",0.70],
+    ["Finishing","Pressing","IRON",0.80]
+  ].map(([section,name,code,smv],i)=>{const mp=Math.max(1,Math.ceil(smv/(0.4*0.75)-0.15));return {no:i+1,section,name,code,smv,operators:mp,machines:code==="MAN"?0:mp,remarks:""}})
+};
+
+let data = JSON.parse(JSON.stringify(SAMPLE));
+let zoom = 1, selected = null, animOn = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = (v,d=2)=> (v==null||!isFinite(v))?"–":Number(v).toFixed(d);
+
+/* ---------------- Excel parsing ---------------- */
+function findSheet(wb, re){ return wb.SheetNames.find(n=>re.test(n.toLowerCase())); }
+function rowsOf(ws){ return XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,blankrows:false}); }
+const norm = s => String(s??"").trim().toLowerCase().replace(/\s+/g," ");
+const num = v => { if(v==null||v==="") return null; const n = typeof v==="number"?v:parseFloat(String(v).replace(/[%,]/g,"")); return isFinite(n)?n:null; };
+
+function parseWorkbook(wb){
+  const warn=[], out={info:{},machines:[],ops:[]};
+  // Operations
+  const opName = findSheet(wb,/operation|ob|bulletin/) || wb.SheetNames.find(n=>rowsOf(wb.Sheets[n]).some(r=>r.some(c=>/smv|sam/.test(norm(c)))));
+  if(!opName) throw new Error("Couldn't find an 'Operations' sheet (needs a header row with an SMV column).");
+  const rows = rowsOf(wb.Sheets[opName]);
+  const hi = rows.findIndex(r=>r.some(c=>/\bsmv\b|\bsam\b/.test(norm(c))));
+  if(hi<0) throw new Error(`Sheet '${opName}' has no SMV column header.`);
+  const H = rows[hi].map(norm);
+  const col = (test)=>H.findIndex(test);
+  const c = {
+    no: col(h=>/^(op\.?\s*(no|#|number)|s\.?\s*no|sr\.?\s*no|seq)/.test(h)),
+    section: col(h=>/section|group|part|component/.test(h)),
+    name: col(h=>/(operation|description)/.test(h) && !/^op\.?\s*(no|#)/.test(h)),
+    code: col(h=>/machine\s*(code|type)|^m\/c\s*(code|type)?$|^machine$/.test(h)),
+    smv: col(h=>/\bsmv\b|\bsam\b/.test(h)),
+    ops: col(h=>/(operator|manpower|^mp$|man power)/.test(h) && !/theor|req/.test(h)),
+    mc: col(h=>/^machines$|no\.? of machines|machine qty|m\/c qty|^mc$|qty of machine/.test(h)),
+    rem: col(h=>/remark|note/.test(h))
+  };
+  if(c.name<0) warn.push("No 'Operation Description' column found – operation numbers will be used as names.");
+  if(c.code<0) warn.push("No 'Machine Code' column found – all stations treated as 'SNLS'.");
+  rows.slice(hi+1).forEach((r,i)=>{
+    const smv = num(r[c.smv]);
+    const name = c.name>=0 ? r[c.name] : null;
+    if(smv==null && !name) return;
+    if(smv==null||smv<=0){ warn.push(`Row ${hi+i+2}: missing or zero SMV – skipped.`); return; }
+    out.ops.push({
+      no: c.no>=0 && r[c.no]!=null ? r[c.no] : out.ops.length+1,
+      section: (c.section>=0 && r[c.section]) ? String(r[c.section]).trim() : "Line",
+      name: name ? String(name).trim() : `Operation ${out.ops.length+1}`,
+      code: (c.code>=0 && r[c.code]) ? String(r[c.code]).trim().toUpperCase() : "SNLS",
+      smv, operators: c.ops>=0 ? num(r[c.ops]) : null, machines: c.mc>=0 ? num(r[c.mc]) : null,
+      remarks: c.rem>=0 && r[c.rem] ? String(r[c.rem]) : ""
+    });
+  });
+  if(!out.ops.length) throw new Error(`No operations with SMV found on '${opName}'.`);
+  // Line info
+  const liName = findSheet(wb,/line|info|header|setting/);
+  if(liName){
+    rowsOf(wb.Sheets[liName]).forEach(r=>{
+      const k = norm(r[0]), v = r[1]; if(!k || v==null) return;
+      const I=out.info; // first match wins, so calculated rows further down don't override inputs
+      if(/target/.test(k)) I.target??=num(v);
+      else if(/hour/.test(k)) I.hours??=num(v);
+      else if(/effic/.test(k)) { let e=num(v); if(e!=null && e>1.5) e/=100; I.eff??=e; }
+      else if(/layout/.test(k)) I.layout??=String(v);
+      else if(/orient/.test(k)) I.orient??=String(v);
+      else if(/line name|^line$/.test(k)) I.lineName??=String(v);
+      else if(/style|order/.test(k)) I.style??=String(v);
+      else if(/buyer|customer/.test(k)) I.buyer??=String(v);
+    });
+  } else warn.push("No 'Line_Info' sheet – using default target 1000 pcs, 8 h, 70% efficiency.");
+  out.info.target ??= 1000; out.info.hours ??= 8; out.info.eff ??= 0.7; out.info.layout ??= "Two-sided";
+  // Machine master
+  const mmName = findSheet(wb,/machine/);
+  if(mmName && mmName!==opName){
+    const mr = rowsOf(wb.Sheets[mmName]); const h = (mr[0]||[]).map(norm);
+    const ci = t=>h.findIndex(t);
+    const cc=ci(x=>/code|type/.test(x)), cd=ci(x=>/desc|name/.test(x)), ck=ci(x=>/categ/.test(x)), cl=ci(x=>/colou?r/.test(x));
+    mr.slice(1).forEach(r=>{ const code = r[cc>=0?cc:0]; if(!code) return;
+      out.machines.push({code:String(code).trim().toUpperCase(),desc:cd>=0?String(r[cd]??""):"",cat:ck>=0?String(r[ck]??""):"",color:cl>=0&&r[cl]?String(r[cl]).trim():""}); });
+  }
+  const known = new Set(out.machines.map(m=>m.code));
+  const missing = [...new Set(out.ops.map(o=>o.code))].filter(cd=>!known.has(cd));
+  missing.forEach(cd=>out.machines.push({code:cd,desc:"",cat:/^(MAN|MANUAL|HELPER|TABLE)$/.test(cd)?"Manual":"",color:""}));
+  if(missing.length && out.machines.length>missing.length) warn.push(`Machine codes not in Machine_Master: ${missing.join(", ")}.`);
+  return {data:out,warn};
+}
+
+/* ---------------- calculations ---------------- */
+function isManual(code){ const m=data.machines.find(x=>x.code===code); return (m && /manual/i.test(m.cat)) || /^(MAN|MANUAL|HELPER|TABLE)$/.test(code); }
+function compute(){
+  const I=data.info, avail=I.hours*60, takt=avail/I.target, req=takt*I.eff;
+  const ops = data.ops.map(o=>{
+    const autoOps = o.operators==null || o.operators==="";
+    const operators = autoOps ? Math.max(1,Math.round(o.smv/req)) : Math.max(0,o.operators);
+    const machines = (o.machines==null||o.machines==="") ? (isManual(o.code)?0:operators) : Math.max(0,o.machines);
+    const cycle = operators>0 ? o.smv/operators : Infinity;
+    return {...o, operators, machines, autoOps, cycle, cap: operators>0? operators*60/o.smv : 0, load: cycle/req, theo:o.smv/req};
+  });
+  const totalSMV = ops.reduce((a,o)=>a+o.smv,0), totalOps=ops.reduce((a,o)=>a+o.operators,0), totalMc=ops.reduce((a,o)=>a+o.machines,0);
+  const bnCycle = Math.max(...ops.map(o=>o.cycle));
+  const bn = ops.filter(o=>o.cycle===bnCycle);
+  return {ops,avail,takt,req,totalSMV,totalOps,totalMc,bnCycle,bn,
+    theoMP: totalSMV/req, pitch: totalSMV/totalOps,
+    balEff: totalSMV/(totalOps*bnCycle), outHr: 60/bnCycle*I.eff, outDay: 60/bnCycle*I.eff*I.hours};
+}
+
+/* ---------------- colors ---------------- */
+function colorMap(){
+  const slots=["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"], map={}; let k=0;
+  const used = [...new Set(data.ops.map(o=>o.code))];
+  const order = [...data.machines.map(m=>m.code).filter(c=>used.includes(c)), ...used.filter(c=>!data.machines.some(m=>m.code===c))];
+  order.forEach(cd=>{
+    const m = data.machines.find(x=>x.code===cd);
+    if(m && /^#[0-9a-f]{3,8}$/i.test(m.color)) map[cd]=m.color;
+    else if(isManual(cd)) map[cd]="var(--neutral)";
+    else map[cd]= k<slots.length ? `var(${slots[k++]})` : "var(--neutral)";
+  });
+  return {map,order};
+}
+
+/* ---------------- layout drawing ---------------- */
+const MW=70, MH=60, SECGAP=30, LM=110, RM=110;   // MW×MH = machine table artwork size
+/* Station frame for a station on the near (top) side of the conveyor; the conveyor is below the frame.
+   art/op map artwork-local and operator-local points into the frame. Far-side stations are the same frame rotated 180°. */
+function frameSpec(){
+  const o=$("orient").value;
+  if(o==="back") return {o,SW:70,BH:85,PITCH:82,table:{x:0,y:0,w:70,h:60},
+    art:(x,y)=>[70-x,60-y], artSvg:"rotate(180 35 30)", op:(x,y)=>[46-x,68-y], opSvg:"translate(46 68) rotate(180)", label:{x:0,y:0,w:70,h:28}, badge:{x:-4,y:53}};
+  if(o==="side") return {o,SW:92,BH:100,PITCH:100,table:{x:30,y:30,w:60,h:70},
+    art:(x,y)=>[30+y,100-x], artSvg:"translate(30 100) rotate(-90)", op:(x,y)=>[22+y,76-x], opSvg:"translate(22 76) rotate(-90)", label:{x:0,y:0,w:92,h:28}, badge:{x:70,y:86}};
+  return {o:"facing",SW:70,BH:85,PITCH:82,table:{x:0,y:25,w:70,h:60},
+    art:(x,y)=>[x,25+y], artSvg:"translate(0 25)", op:(x,y)=>[24+x,17+y], opSvg:"translate(24 17)", label:{x:0,y:55,w:70,h:30}, badge:{x:50,y:17}};
+}
+function geomY(two,BH){ const yLab=18, bandT=31, yTab=bandT+BH+8, TH=40, bandB=yTab+TH+8, yLabB=bandB+BH+18;
+  return {yLab,bandT,yTab,TH,bandB,yLabB,H: two? yLabB+14 : yTab+TH+30}; }
+// mirror a frame rect for the far side of the conveyor
+const mirrorRect=(r,fs,bottom)=> bottom? {x:fs.SW-r.x-r.w, y:fs.BH-r.y-r.h, w:r.w, h:r.h} : {...r};
+function buildLayout(R){
+  const type=$("ltype").value, units=[], gapOn=$("secgap").checked, PITCH=frameSpec().PITCH;
+  R.ops.forEach(o=>{ const n=Math.max(o.operators,o.machines,1); for(let k=0;k<n;k++) units.push({op:o,k,hasMc:k<o.machines,hasOp:k<o.operators}); });
+  let x=0, side=0, prev=null;
+  if(type==="Two-sided"){
+    units.forEach(u=>{
+      if(gapOn && prev!==null && u.op.section!==prev){ if(side===1){x+=PITCH;side=0;} x+=SECGAP; }
+      u.x=x; u.side=side; if(side===0) side=1; else {side=0; x+=PITCH;}
+      prev=u.op.section;
+    });
+  } else {
+    units.forEach(u=>{ if(gapOn && prev!==null && u.op.section!==prev) x+=SECGAP; u.x=x; u.side=0; x+=PITCH; prev=u.op.section; });
+    if(type==="U-shape"){
+      const half=Math.ceil(units.length/2), topEnd=units[half-1].x, split=units[half]?units[half].x:0;
+      units.forEach((u,i)=>{ if(i>=half){ u.x = topEnd-(u.x-split); u.side=1; } });
+      const mn=Math.min(...units.map(u=>u.x)); units.forEach(u=>u.x-=mn);
+    }
+  }
+  return {units,type};
+}
+function mkind(o,u){
+  if(!u.hasMc) return isManual(o.code)?"manual":"helper";
+  const m=data.machines.find(x=>x.code===o.code), d=(m?.desc||"")+" "+(m?.cat||"");
+  if(/IRON|PRESS/.test(o.code)||/iron|press/i.test(d)) return "iron";
+  if(/FUS/.test(o.code)||/fusing/i.test(d)) return "fuse";
+  if(isManual(o.code)) return "manual";
+  return "sew";
+}
+const coneCount=c=>/OL|4T|OVERLOCK|SERGER/.test(c)?4:/FL|CS|COVER|FLAT|3T/.test(c)?3:/DN|2N/.test(c)?2:1;
+const CONE_POS=[[63,27],[56,27],[49,27],[42,27]];
+const rnd=i=>((i*9301+49297)%233280)/233280; // stable pseudo-random delays
+
+/* station artwork in local coords (operator at the top edge, y<0) */
+function wrapName(t,max=15,lines=2){
+  const words=String(t||"").split(/\s+/).filter(Boolean), out=[]; let cur="";
+  words.forEach(w=>{ if(!cur) cur=w; else if((cur+" "+w).length<=max) cur+=" "+w; else { out.push(cur); cur=w; } });
+  if(cur) out.push(cur);
+  const res=out.slice(0,lines).map(l=>l.length>max?l.slice(0,max-1)+"…":l);
+  if(out.length>lines){ let l=res[lines-1]; res[lines-1]=(l.length>max-1?l.slice(0,max-1):l)+"…"; }
+  return res;
+}
+function stationArt(kind,col,code,i){
+  const d1=`style="animation-delay:-${(rnd(i)*0.5).toFixed(2)}s"`, d2=`style="animation-delay:-${(rnd(i+7)*2.4).toFixed(2)}s"`;
+  if(kind==="sew"){
+    let s=`<rect x="13" y="7" width="46" height="16" rx="3" fill="var(--surface)" stroke="var(--ink-3)" stroke-width=".8"/>`;
+    s+=`<g class="fabric" ${d2}><rect x="5" y="12" width="17" height="11" rx="1.5" fill="var(--fabric)"/><path d="M7 17.5h13" stroke="var(--surface)" stroke-width=".7" stroke-dasharray="1.5 1.2"/></g>`;
+    s+=`<rect x="21" y="9.5" width="34" height="8" rx="3" fill="var(--mach)" stroke="var(--ink-2)" stroke-width=".8"/>`;
+    s+=`<rect x="14" y="8" width="10" height="12" rx="2.5" fill="var(--mach)" stroke="var(--ink-2)" stroke-width=".8"/>`;
+    s+=`<circle class="needle" ${d1} cx="19" cy="21.6" r="1.4" fill="var(--ink)"/>`;
+    s+=`<ellipse cx="58.5" cy="13.5" rx="2.2" ry="6" fill="var(--ink-2)"/>`;
+    CONE_POS.slice(0,coneCount(code)).forEach(([cx,cy])=>{ s+=`<circle cx="${cx}" cy="${cy}" r="3.2" fill="${col}" stroke="var(--ink-2)" stroke-width=".6"/><circle cx="${cx}" cy="${cy}" r="1" fill="var(--surface)"/>`; });
+    return s;
+  }
+  if(kind==="fuse"){
+    let s=`<rect x="4" y="7" width="62" height="20" rx="2" fill="var(--surface)" stroke="var(--ink-2)" stroke-width=".8"/>`;
+    for(let k=0;k<10;k++) s+=`<line x1="${7+k*6}" y1="8" x2="${7+k*6}" y2="26" stroke="var(--line)" stroke-width=".8"/>`;
+    s+=`<g class="fabric" ${d2}><rect x="8" y="11" width="12" height="12" rx="1" fill="var(--fabric)"/></g>`;
+    s+=`<rect x="26" y="4" width="22" height="26" rx="2.5" fill="var(--mach)" stroke="var(--ink-2)" stroke-width=".8"/><circle class="needle" ${d1} cx="37" cy="17" r="2" fill="var(--crit)"/>`;
+    return s;
+  }
+  if(kind==="iron"){
+    let s=`<path d="M5 9H50Q63 9 63 16.5Q63 24 50 24H5Z" fill="var(--surface)" stroke="var(--ink-2)" stroke-width=".8"/>`;
+    s+=`<rect x="9" y="12" width="16" height="9" rx="1" fill="var(--fabric)"/>`;
+    s+=`<g class="fabric" ${d2}><path d="M22 12H34Q39 12 39 16.5Q39 21 34 21H22Z" fill="var(--mach)" stroke="var(--ink-2)" stroke-width=".8"/><rect x="25" y="15" width="7" height="3" rx="1.5" fill="var(--ink-2)"/></g>`;
+    s+=`<path class="steam" ${d1} d="M44 7q2-2.5 0-5M48 7q2-2.5 0-5" stroke="var(--ink-3)" stroke-width=".8" fill="none"/>`;
+    return s;
+  }
+  // manual / helper table
+  let s=`<rect x="9" y="7" width="22" height="15" rx="1.5" fill="var(--fabric)" opacity=".5" transform="rotate(-7 20 14)"/><rect x="11" y="9" width="22" height="15" rx="1.5" fill="var(--fabric)"/>`;
+  if(kind==="manual") s+=`<g stroke="var(--ink-2)" stroke-width="1.1" fill="none"><circle cx="44" cy="11" r="2.4"/><circle cx="44" cy="19" r="2.4"/><path d="M46 12.5L58 18.5M46 17.5L58 11.5"/></g>`;
+  else s+=`<rect x="40" y="9" width="19" height="13" rx="2" fill="var(--table)" stroke="var(--ink-3)" stroke-width=".8"/><path d="M40 13.5H59" stroke="var(--ink-3)" stroke-width=".8"/><rect x="46" y="16" width="7" height="4" fill="var(--surface)"/>`;
+  return s;
+}
+/* operator seen from above, facing +y (towards the machine) */
+function operatorArt(shirt,present,i){
+  if(!present) return `<rect x="-10" y="-17" width="20" height="9" rx="3" fill="none" stroke="var(--ink-3)" stroke-dasharray="2 2"/>`;
+  return `<rect x="-10" y="-17" width="20" height="9" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width=".8"/>`
+   +`<g class="hands" style="animation-delay:-${(rnd(i+3)*0.5).toFixed(2)}s"><path d="M-9-1L-6 11M9-1L6 11" stroke="${shirt}" stroke-width="4" stroke-linecap="round"/><circle cx="-6" cy="11.5" r="2.4" fill="var(--skin)"/><circle cx="6" cy="11.5" r="2.4" fill="var(--skin)"/></g>`
+   +`<ellipse cx="0" cy="-3" rx="12" ry="6.5" fill="${shirt}"/><circle cx="0" cy="-2.5" r="5.2" fill="var(--hair)"/>`;
+}
+const SHIRT_D="M-7-4L-3-6Q0-4 3-6L7-4L6-1L4-2L4 6L-4 6L-4-2L-6-1Z";
+
+function drawLayout(R,opt={}){
+  const flags = opt.flags ?? $("flags").checked;
+  const {map} = colorMap(); const {units,type}=buildLayout(R);
+  const two = type!=="Single row", fs=frameSpec(), G=geomY(two,fs.BH);
+  const maxX = Math.max(...units.map(u=>u.x))+fs.SW;
+  const W = LM+maxX+RM, Hh=G.H;
+  const tabX1 = LM-50, tabX2 = LM+maxX+50, mid=G.yTab+G.TH/2;
+  const bnSet = new Set(R.bn.map(o=>o.no));
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W*zoom}" height="${Hh*zoom}" viewBox="0 0 ${W} ${Hh}" font-family="IBM Plex Sans, sans-serif" role="img" aria-label="Stitching line layout">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink-2)"/></marker>
+  <pattern id="rollers" width="8" height="10" patternUnits="userSpaceOnUse"><rect width="8" height="10" fill="var(--table)"/><line x1="4" y1="0" x2="4" y2="10" stroke="var(--table-stroke)" stroke-width="1.2"/></pattern></defs>`;
+  // conveyor
+  s += `<rect x="${tabX1}" y="${G.yTab}" width="${tabX2-tabX1}" height="${G.TH}" rx="5" fill="var(--table-stroke)"/>`;
+  s += `<rect x="${tabX1+3}" y="${G.yTab+4}" width="${tabX2-tabX1-6}" height="${G.TH-8}" rx="3" fill="url(#rollers)"/>`;
+  let pathD;
+  if(type==="U-shape"){
+    pathD=`M${tabX1+8} ${mid-8} H${tabX2-22} Q${tabX2-8} ${mid-8} ${tabX2-8} ${mid} Q${tabX2-8} ${mid+8} ${tabX2-22} ${mid+8} H${tabX1+12}`;
+    s += `<text x="${tabX1-6}" y="${mid-4}" text-anchor="end" font-size="11" fill="var(--ink-2)">Input ▸</text><text x="${tabX1-6}" y="${mid+12}" text-anchor="end" font-size="11" font-weight="600" fill="var(--ink)">◂ Output</text>`;
+  } else {
+    pathD=`M${tabX1+8} ${mid} H${tabX2-10}`;
+    s += `<text x="${tabX1-6}" y="${mid+4}" text-anchor="end" font-size="11" fill="var(--ink-2)">Input ▸</text><text x="${tabX2+6}" y="${mid+4}" font-size="11" font-weight="600" fill="var(--ink)">Output ▸</text>`;
+  }
+  s += `<path id="flowP" d="${pathD}" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="6 5" marker-end="url(#ah)"/>`;
+  // moving garment bundles
+  const plen = type==="U-shape" ? 2*(tabX2-tabX1) : (tabX2-tabX1);
+  const nb=Math.max(3,Math.floor(plen/150)), dur=plen/32;
+  const bsc = type==="U-shape"?0.85:1.1;
+  for(let b=0;b<nb;b++){
+    s += `<g><g transform="scale(${bsc})"><path d="${SHIRT_D}" fill="var(--fabric)" stroke="var(--ink-2)" stroke-width=".7"/><rect x="-2" y="0" width="4" height="3" fill="var(--surface)"/></g><animateMotion dur="${dur.toFixed(1)}s" begin="-${(b*dur/nb).toFixed(2)}s" repeatCount="indefinite"><mpath href="#flowP"/></animateMotion></g>`;
+  }
+  // section labels
+  const runs=[]; [0,1].forEach(sd=>{ let cur=null; units.filter(u=>u.side===sd).forEach(u=>{ if(!cur||cur.sec!==u.op.section){ cur={sec:u.op.section,side:sd,xs:[]}; runs.push(cur);} cur.xs.push(u.x); }); });
+
+  runs.forEach(g=>{ const a=LM+Math.min(...g.xs), b=LM+Math.max(...g.xs)+fs.SW;
+    const top = g.side===0, ly = top? G.yLab+6 : G.yLabB-10, ty = top? G.yLab : G.yLabB+2;
+    s += `<path d="M${a} ${ly+(top?4:-4)} V${ly} H${b} V${ly+(top?4:-4)}" fill="none" stroke="var(--ink-3)"/>`;
+    s += `<text x="${(a+b)/2}" y="${ty}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-2)">${esc(g.sec.toUpperCase())}</text>`; });
+  // stations
+  const lblMode=$("lbl").value;
+  units.forEach((u,i)=>{
+    const o=u.op, top=u.side===0 || !two, X=LM+u.x, Y=top?G.bandT:G.bandB, flip=!top && $("farside").value==="mirror";
+    const col = map[o.code]||"var(--neutral)", over = flags && o.load>1.0001, bn = flags && bnSet.has(o.no), kind=mkind(o,u);
+    const sel = selected===o.no ? " sel":"";
+    const tag = `${o.no}${Math.max(o.operators,o.machines)>1?"·"+(u.k+1):""}`;
+    let line2 = lblMode==="cycle" ? fmt(o.cycle,3) : (kind==="helper"?"Helper":o.code);
+    if(line2.length>8) line2 = line2.slice(0,7)+"…";
+    const manualish = kind==="manual"||kind==="helper", tb=fs.table;
+    s += `<g class="station${sel}" tabindex="0" data-op="${esc(o.no)}" role="button" aria-label="Op ${esc(o.no)} ${esc(o.name)}, ${esc(o.code)}">`;
+    s += `<g transform="translate(${X} ${Y})${flip?` rotate(180 ${fs.SW/2} ${fs.BH/2})`:""}">`;
+    s += `<rect x="-3" y="-3" width="${fs.SW+6}" height="${fs.BH+6}" fill="transparent"/>`;
+    if(over) s += `<rect x="${tb.x-3}" y="${tb.y-3}" width="${tb.w+6}" height="${tb.h+6}" rx="6" fill="none" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    s += `<rect class="mbox" x="${tb.x}" y="${tb.y}" width="${tb.w}" height="${tb.h}" rx="4" fill="${manualish?"var(--surface-2)":col}" fill-opacity="${manualish?1:.2}" stroke="${manualish?"var(--ink-3)":col}" stroke-width="${manualish?1.2:2}" ${manualish?'stroke-dasharray="4 2"':""}/>`;
+    s += `<g transform="${fs.artSvg}">${stationArt(kind,col,o.code,i)}</g>`;
+    s += `<g transform="${fs.opSvg}">${operatorArt(over?"var(--crit)":"var(--shirt)",u.hasOp,i)}</g>`;
+    s += `</g>`;
+    // upright text on the label area (back of the table / beside the operator)
+    const lb=mirrorRect(fs.label,fs,flip), showNames=$("opnames").checked;
+    const nm=showNames?wrapName(o.name,Math.floor((lb.w-10)/4.1)):[], ty0=Y+lb.y+9;
+    s += `<text x="${X+lb.x+5}" y="${ty0}" font-size="10" fill="var(--ink)"><tspan font-weight="700">${esc(tag)}</tspan> <tspan font-size="8.5" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">${esc(line2)}</tspan></text>`;
+    nm.forEach((l,j)=>{ s += `<text x="${X+lb.x+5}" y="${ty0+9+j*8.5}" font-size="7.6" fill="var(--ink-2)">${esc(l)}</text>`; });
+    if(bn){ const br=mirrorRect({x:fs.badge.x,y:fs.badge.y,w:24,h:14},fs,flip);
+      s += `<g><rect x="${X+br.x}" y="${Y+br.y}" width="24" height="14" rx="7" fill="var(--crit)"/><text x="${X+br.x+12}" y="${Y+br.y+10}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">BN</text></g>`; }
+    s += `</g>`;
+  });
+  s += `</svg>`;
+  if(opt.stringOnly) return s;
+  const wrap=$("lwrap"); wrap.innerHTML = s;
+  const svg=wrap.querySelector("svg");
+  wrap.classList.toggle("anim", animOn);
+  try{ if(!animOn) svg.pauseAnimations(); }catch(e){}
+  wrap.querySelectorAll(".station").forEach(g=>{
+    const pick=()=>select(g.dataset.op);
+    g.addEventListener("click",pick); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();} });
+    g.addEventListener("mousemove",e=>{ const o=R.ops.find(x=>String(x.no)===g.dataset.op); tip(e,`<b>Op ${esc(o.no)} – ${esc(o.name)}</b><br>${esc(o.code)} · SMV ${fmt(o.smv)} · ${o.operators} op · cycle ${fmt(o.cycle,3)}`); });
+    g.addEventListener("mouseleave",hideTip);
+  });
+  // legend
+  const {order}=colorMap();
+  let lg = order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const c=map[cd];
+    const n=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0);
+    return `<span><i class="sw" style="border-color:${c};background:color-mix(in srgb, ${c} 20%, transparent)"></i><b class="mono">${esc(cd)}</b> ${esc(m?.desc||"")} ${n?`(${n})`:""}</span>`; }).join("");
+  lg += `<span><svg width="22" height="22" viewBox="-12 -18 24 32"><g>${operatorArt("var(--shirt)",true,0)}</g></svg>Operator</span>`;
+  lg += `<span><svg width="20" height="18" viewBox="-9 -8 18 16"><path d="${SHIRT_D}" fill="var(--fabric)" stroke="var(--ink-2)" stroke-width=".7"/></svg>Garment bundle</span>`;
+  if(flags){
+  lg += `<span><svg width="20" height="16"><rect x="2" y="2" width="16" height="12" rx="3" fill="none" stroke="var(--crit)" stroke-dasharray="3 2" stroke-width="1.5"/></svg>Over required cycle (red shirt)</span>`;
+  lg += `<span><svg width="26" height="16"><rect x="1" y="1" width="24" height="14" rx="7" fill="var(--crit)"/><text x="13" y="11" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">BN</text></svg>Bottleneck</span>`; }
+  lg += `<span><svg width="20" height="16"><rect x="2" y="2" width="16" height="12" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-dasharray="3 2"/></svg>Manual / helper table</span>`;
+  $("legend").innerHTML = lg;
+}
+
+/* ---------------- balance chart ---------------- */
+function drawChart(R){
+  const n=R.ops.length, bw=Math.max(18,Math.min(36,700/n)), gap=6, L=44, B=30, T=22, h=220;
+  const W=L+n*(bw+gap)+120;
+  const maxV=Math.max(R.req*1.15, ...R.ops.map(o=>isFinite(o.cycle)?o.cycle:0))*1.08;
+  const y=v=>T+h-(v/maxV)*h;
+  const ticks=4; let s=`<svg width="${W}" height="${T+h+B}" viewBox="0 0 ${W} ${T+h+B}" font-family="IBM Plex Sans, sans-serif" role="img" aria-label="Line balance chart">`;
+  for(let i=0;i<=ticks;i++){ const v=maxV*i/ticks; s+=`<line x1="${L}" x2="${W-110}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--ink-3)" font-family="IBM Plex Mono, monospace">${v.toFixed(2)}</text>`; }
+  R.ops.forEach((o,i)=>{
+    const x=L+i*(bw+gap)+gap/2, v=isFinite(o.cycle)?o.cycle:maxV, over=o.load>1.0001, yy=y(v), hh=T+h-yy;
+    const c= over?"var(--crit)":"var(--s1)";
+    s+=`<g class="bar" data-op="${esc(o.no)}" style="cursor:pointer"><rect x="${x-gap/2}" y="${T}" width="${bw+gap}" height="${h}" fill="transparent"/>`;
+    s+=`<path d="M${x} ${T+h} V${yy+Math.min(4,hh)} Q${x} ${yy} ${x+Math.min(4,hh)} ${yy} H${x+bw-Math.min(4,hh)} Q${x+bw} ${yy} ${x+bw} ${yy+Math.min(4,hh)} V${T+h}Z" fill="${c}" ${selected===o.no?`stroke="var(--ink)" stroke-width="2"`:""}/>`;
+    if(over) s+=`<text x="${x+bw/2}" y="${yy-4}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--crit)">!</text>`;
+    s+=`<text x="${x+bw/2}" y="${T+h+14}" text-anchor="middle" font-size="10" fill="var(--ink-2)">${esc(o.no)}</text></g>`;
+  });
+  s+=`<line x1="${L}" x2="${W-110}" y1="${y(R.req)}" y2="${y(R.req)}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${W-106}" y="${y(R.req)+4}" font-size="10.5" font-weight="600" fill="var(--ink)">Required ${R.req.toFixed(3)}</text>`;
+  s+=`<line x1="${L}" x2="${W-110}" y1="${y(R.pitch)}" y2="${y(R.pitch)}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="2 3"/><text x="${W-106}" y="${y(R.pitch)+(Math.abs(y(R.pitch)-y(R.req))<12?14:4)}" font-size="10.5" fill="var(--ink-2)">Avg pitch ${R.pitch.toFixed(3)}</text>`;
+  s+=`<text x="${L}" y="12" font-size="10.5" fill="var(--ink-3)">min / pc per operator</text><text x="${L+(n*(bw+gap))/2}" y="${T+h+28}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">Operation no.</text></svg>`;
+  $("chart").innerHTML=s;
+  $("chart").querySelectorAll(".bar").forEach(g=>{
+    const o=R.ops.find(x=>String(x.no)===g.dataset.op);
+    g.addEventListener("click",()=>select(g.dataset.op));
+    g.addEventListener("mousemove",e=>tip(e,`<b>Op ${esc(o.no)} – ${esc(o.name)}</b><br>Cycle ${fmt(o.cycle,3)} min · load ${fmt(o.load*100,0)}%`));
+    g.addEventListener("mouseleave",hideTip);
+  });
+}
+
+/* ---------------- panels ---------------- */
+function drawKPIs(R){
+  const I=data.info, k=[
+    ["Total SMV",fmt(R.totalSMV,2),"min per garment"],
+    ["Takt time",fmt(R.takt,3),`required cycle ${fmt(R.req,3)} min`],
+    ["Operators",R.totalOps,`theoretical ${fmt(R.theoMP,1)}`, R.totalOps<R.theoMP*0.97],
+    ["Machines",R.totalMc,`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
+    ["Bottleneck",fmt(R.bnCycle,3),R.bn.length>1?`${R.bn.length} ops tie: Op ${R.bn.slice(0,3).map(o=>o.no).join(", ")}${R.bn.length>3?"…":""}`:`Op ${R.bn[0].no} – ${esc(R.bn[0].name)}`, R.bnCycle>R.req],
+    ["Line balance",fmt(R.balEff*100,1)+"%","SMV ÷ (operators × BN cycle)"],
+    ["Expected output",Math.floor(R.outHr)+"/h",`${Math.floor(R.outDay)} per day vs target ${I.target}`, R.outDay<I.target]
+  ];
+  $("kpis").innerHTML = k.map(([l,v,s,bad])=>`<div class="kpi${bad?" bad":""}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+}
+function drawTables(R){
+  let t=`<thead><tr><th class="n">Op</th><th>Section</th><th>Operation</th><th>M/C</th><th class="n">SMV</th><th class="n">Theo MP</th><th class="n">Op</th><th class="n">M/C</th><th class="n">Cycle</th><th class="n">Cap/h</th><th>Status</th></tr></thead><tbody>`;
+  R.ops.forEach(o=>{ const bn=R.bn.includes(o), over=o.load>1.0001;
+    t+=`<tr><td class="n">${esc(o.no)}</td><td>${esc(o.section)}</td><td>${esc(o.name)}</td><td class="mono">${esc(o.code)}</td><td class="n">${fmt(o.smv)}</td><td class="n">${fmt(o.theo,2)}</td><td class="n">${o.operators}${o.autoOps?"*":""}</td><td class="n">${o.machines}</td><td class="n">${fmt(o.cycle,3)}</td><td class="n">${Math.floor(o.cap)}</td><td>${bn?`<span class="tag bn">▲ Bottleneck</span>`:over?`<span class="tag over">! ${fmt(o.load*100,0)}% load</span>`:`<span class="tag ok">${fmt(o.load*100,0)}% load</span>`}</td></tr>`; });
+  t+=`</tbody>`; $("optable").innerHTML=t;
+  const by={}; R.ops.forEach(o=>{ (by[o.code] ||= {mc:0,op:0,smv:0}); by[o.code].mc+=o.machines; by[o.code].op+=o.operators; by[o.code].smv+=o.smv; });
+  const {map,order}=colorMap();
+  let m=`<thead><tr><th>Code</th><th>Description</th><th class="n">Machines</th><th class="n">Operators</th><th class="n">SMV</th></tr></thead><tbody>`;
+  order.forEach(cd=>{ const d=data.machines.find(x=>x.code===cd); const b=by[cd]; if(!b) return;
+    m+=`<tr><td><i class="sw" style="border-color:${map[cd]};width:10px;height:10px;vertical-align:-1px;margin-right:6px"></i><span class="mono">${esc(cd)}</span></td><td>${esc(d?.desc||"")}</td><td class="n">${b.mc}</td><td class="n">${b.op}</td><td class="n">${fmt(b.smv)}</td></tr>`; });
+  m+=`<tr><td><b>Total</b></td><td></td><td class="n"><b>${R.totalMc}</b></td><td class="n"><b>${R.totalOps}</b></td><td class="n"><b>${fmt(R.totalSMV)}</b></td></tr></tbody>`;
+  $("mtable").innerHTML=m;
+}
+function drawDetail(R){
+  const o=R.ops.find(x=>String(x.no)===String(selected));
+  if(!o){ $("detail").innerHTML=`<p class="empty">Tap a station in the layout or a bar in the chart.</p>`; return; }
+  const m=data.machines.find(x=>x.code===o.code);
+  const status = R.bn.includes(o)?`<span class="tag bn">▲ Bottleneck</span>`: o.load>1.0001?`<span class="tag over">! Over required cycle</span>`:`<span class="tag ok">Within required cycle</span>`;
+  $("detail").innerHTML=`<p style="margin:0 0 8px"><b>Op ${esc(o.no)} – ${esc(o.name)}</b><br>${status}</p><dl>
+  <dt>Section</dt><dd>${esc(o.section)}</dd><dt>Machine</dt><dd>${esc(o.code)}${m?.desc?` · ${esc(m.desc)}`:""}</dd>
+  <dt>SMV</dt><dd>${fmt(o.smv,2)} min</dd><dt>Operators</dt><dd>${o.operators}${o.autoOps?" (auto)":""} · theoretical ${fmt(o.theo,2)}</dd>
+  <dt>Machines</dt><dd>${o.machines}</dd><dt>Cycle / operator</dt><dd>${fmt(o.cycle,3)} min</dd>
+  <dt>Load</dt><dd>${fmt(o.load*100,0)}% of required ${fmt(R.req,3)}</dd><dt>Capacity</dt><dd>${Math.floor(o.cap)} pcs/h (100%) · ${Math.floor(o.cap*data.info.eff)} at plan eff.</dd>
+  ${o.remarks?`<dt>Remarks</dt><dd>${esc(o.remarks)}</dd>`:""}</dl>`;
+}
+
+/* ---------------- tooltip ---------------- */
+const tipEl=$("tip");
+function tip(e,html){ tipEl.innerHTML=html; tipEl.style.opacity=1; const w=tipEl.offsetWidth; let x=e.clientX+14; if(x+w>innerWidth-8) x=e.clientX-w-14; tipEl.style.left=x+"px"; tipEl.style.top=(e.clientY+14)+"px"; }
+function hideTip(){ tipEl.style.opacity=0; }
+
+/* ---------------- render ---------------- */
+let lastR=null;
+function render(){
+  $("farside").disabled = $("ltype").value==="Single row";
+  const I=data.info;
+  I.target=Math.max(1,+$("target").value||I.target); I.hours=Math.max(0.5,+$("hours").value||I.hours); I.eff=Math.min(1,Math.max(0.01,(+$("eff").value||I.eff*100)/100));
+  const R=compute(); lastR=R;
+  $("ltitle").innerHTML = `${esc(I.lineName||"Line layout")} <small>${esc(I.style||"")}${I.buyer?` · ${esc(I.buyer)}`:""} · ${$("ltype").value}</small>`;
+  drawKPIs(R); drawLayout(R); drawChart(R); drawAdvice(R); drawTables(R); drawDetail(R);
+}
+function select(no){ selected = (String(selected)===String(no))?null:(isNaN(+no)?no:+no); if(lastR){ drawLayout(lastR); drawChart(lastR); drawDetail(lastR);} if(selected!=null && matchMedia("(max-width:900px)").matches) $("detail").scrollIntoView({behavior:"smooth",block:"nearest"}); }
+function loadData(d,srcText,warn=[]){
+  data=d; selected=null;
+  const I=d.info; $("target").value=I.target; $("hours").value=I.hours; $("eff").value=Math.round(I.eff*100);
+  const lt=/u/i.test(I.layout||"")&&!/two/i.test(I.layout)?"U-shape":/single|one|straight/i.test(I.layout||"")?"Single row":"Two-sided"; $("ltype").value=lt;
+  const ot=String(I.orient||""); $("orient").value=/back/i.test(ot)?"back":/side|90/i.test(ot)?"side":"facing";
+  $("src").textContent=srcText;
+  $("msgs").innerHTML=warn.map(w=>`<div class="msg">${esc(w)}</div>`).join("") + (d.ops.some(o=>o.operators==null||o.operators==="")?`<div class="msg">Operators were blank for some operations – allocated automatically (marked *).</div>`:"");
+  render();
+}
+
+/* ---------------- Visio (.vsdx) export ---------------- */
+const VHEX={"--s1":"#2a78d6","--s2":"#eb6834","--s3":"#1baf7a","--s4":"#eda100","--s5":"#e87ba4","--s6":"#008300","--s7":"#6250d6","--s8":"#e34948","--neutral":"#8a8983"};
+const toHex=c=>{const m=/var\((--[\w-]+)\)/.exec(c||"");return m?(VHEX[m[1]]||"#8a8983"):(c||"#8a8983");};
+const xe=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const r4=v=>Math.round(v*10000)/10000;
+
+function buildVsdxParts(R){
+  const S=0.8;                       // 1 screen px = 0.8 real inches → machine 4 ft × 2.5 ft
+  const {map,order}=colorMap(); const {units,type}=buildLayout(R); const two=type!=="Single row";
+  const I=data.info;
+  const fs=frameSpec();
+  const maxX=Math.max(...units.map(u=>u.x))+fs.SW;
+  const {yLab,bandT,yTab,TH,bandB,yLabB,H:layoutH}=geomY(two,fs.BH);
+  const TOP=90, perRow=4, legRows=Math.ceil((order.length+4)/perRow), LEGH=50+legRows*30;
+  const Wpx=Math.max(LM+maxX+RM, perRow*300+60), Hpx=TOP+layoutH+LEGH;
+  const AX=px=>px*S, AY=py=>(Hpx-py)*S;             // absolute, Visio y is up
+  let id=1;
+  const C=(n,v,u)=>`<Cell N="${n}" V="${typeof v==="number"?r4(v):xe(v)}"${u?` U="${u}"`:""}/>`;
+  const geomRect=(noFill,noLine)=>`<Section N="Geometry" IX="0">${C("NoFill",noFill?1:0)}${C("NoLine",noLine?1:0)}${C("NoShow",0)}${C("NoSnap",0)}<Row T="RelMoveTo" IX="1">${C("X",0)}${C("Y",0)}</Row><Row T="RelLineTo" IX="2">${C("X",1)}${C("Y",0)}</Row><Row T="RelLineTo" IX="3">${C("X",1)}${C("Y",1)}</Row><Row T="RelLineTo" IX="4">${C("X",0)}${C("Y",1)}</Row><Row T="RelLineTo" IX="5">${C("X",0)}${C("Y",0)}</Row></Section>`;
+  const geomEll=(w,h,noFill)=>`<Section N="Geometry" IX="0">${C("NoFill",noFill?1:0)}${C("NoLine",0)}${C("NoShow",0)}${C("NoSnap",0)}<Row T="Ellipse" IX="1">${C("X",w/2)}${C("Y",h/2)}${C("A",w)}${C("B",h/2)}${C("C",w/2)}${C("D",h)}</Row></Section>`;
+  const charSec=(pt,color,bold)=>`<Section N="Character"><Row IX="0">${C("Color",color)}${C("Style",bold?1:0)}${C("Size",pt/72,"PT")}</Row></Section>`;
+  const paraSec=align=>`<Section N="Paragraph"><Row IX="0">${C("HorzAlign",align)}</Row></Section>`;
+  const propSec=rows=>`<Section N="Property">${rows.map(([k,label,v])=>`<Row N="${k}"><Cell N="Value" V="${xe(v)}" U="STR"/>${C("Prompt","")}${C("Label",label)}${C("Format","")}${C("SortKey","")}${C("Type",0)}${C("Invisible",0)}${C("Verify",0)}${C("DataLinked",0)}${C("LangID","en-US")}${C("Calendar",0)}</Row>`).join("")}</Section>`;
+  // generic 2-D shape; x,y = absolute bottom-left (inches); o = group origin
+  function shape(p,o){
+    const {x,y,w,h}=p, ox=o?o.x:0, oy=o?o.y:0;
+    let s=`<Shape ID="${id++}" NameU="${xe(p.name||"Shape")}" Name="${xe(p.name||"Shape")}" Type="Shape" LineStyle="0" FillStyle="0" TextStyle="0">`;
+    s+=C("PinX",x-ox+w/2)+C("PinY",y-oy+h/2)+C("Width",w)+C("Height",h)+C("LocPinX",w/2)+C("LocPinY",h/2)+C("Angle",0);
+    s+=C("FillForegnd",p.fill||"#FFFFFF")+C("FillPattern",p.noFill?0:1)+C("FillForegndTrans",p.trans||0);
+    s+=C("LineColor",p.line||"#52514E")+C("LineWeight",(p.lw??0.75)/72,"PT")+C("LinePattern",p.noLine?0:(p.dash?2:1))+C("Rounding",p.round||0);
+    if(p.endArrow) s+=C("EndArrow",4)+C("EndArrowSize",2);
+    s+=C("LeftMargin",1/72,"PT")+C("RightMargin",1/72,"PT")+C("TopMargin",1/72,"PT")+C("BottomMargin",1/72,"PT")+C("VerticalAlign",p.valign??1);
+    if(p.text!=null) s+=charSec(p.pt||8,p.tcolor||"#0B0B0B",p.bold)+paraSec(p.align??1);
+    if(p.props) s+=propSec(p.props);
+    s+= p.geom || (p.ellipse? geomEll(w,h,p.noFill) : geomRect(p.noFill,p.noLine));
+    if(p.text!=null) s+=`<Text>${xe(p.text)}</Text>`;
+    return s+`</Shape>`;
+  }
+  function line(x1,y1,x2,y2,opt={}){
+    const x=Math.min(x1,x2), y=Math.min(y1,y2), w=Math.max(Math.abs(x2-x1),0.01), h=Math.max(Math.abs(y2-y1),0.01);
+    const geom=`<Section N="Geometry" IX="0">${C("NoFill",1)}${C("NoLine",0)}${C("NoShow",0)}${C("NoSnap",0)}<Row T="MoveTo" IX="1">${C("X",x1-x)}${C("Y",y1-y)}</Row><Row T="LineTo" IX="2">${C("X",x2-x)}${C("Y",y2-y)}</Row></Section>`;
+    return shape({name:opt.name||"Line",x,y,w,h,noFill:true,line:opt.color||"#52514E",lw:opt.lw||1,dash:opt.dash,endArrow:opt.arrow,geom});
+  }
+  function text(x,y,w,h,t,opt={}){ return shape({name:opt.name||"Label",x,y,w,h,noFill:true,noLine:true,text:t,pt:opt.pt||9,bold:opt.bold,tcolor:opt.color||"#0B0B0B",align:opt.align??1}); }
+  const out=[];
+  // title block
+  const bn=R.bn.map(o=>o.no).join(", ");
+  out.push(text(AX(20),AY(48),AX(Wpx-40),AX(34),`${I.lineName||"Line layout"}${I.style?" – "+I.style:""}${I.buyer?" · "+I.buyer:""}`,{pt:16,bold:true,align:0,name:"Title"}));
+  out.push(text(AX(20),AY(80),AX(Wpx-40),AX(28),`${type} layout · ${$("orient").selectedOptions[0].text} · Target ${I.target} pcs/day · ${I.hours} h · Eff ${Math.round(I.eff*100)}% · Total SMV ${R.totalSMV.toFixed(2)} · Takt ${R.takt.toFixed(3)} min · Operators ${R.totalOps} · Machines ${R.totalMc} · Balance ${(R.balEff*100).toFixed(1)}%`,{pt:9,align:0,color:"#52514E",name:"Summary"}));
+  const T=y=>TOP+y; // layout px y → page px y
+  // work table
+  const tabX1=LM-50, tabX2=LM+maxX+50;
+  out.push(shape({name:"Conveyor",x:AX(tabX1),y:AY(T(yTab+TH)),w:AX(tabX2-tabX1),h:AX(TH),fill:"#BDB6A2",line:"#BDB6A2",round:AX(5)}));
+  out.push(shape({name:"Conveyor belt",x:AX(tabX1+3),y:AY(T(yTab+TH-4)),w:AX(tabX2-tabX1-6),h:AX(TH-8),fill:"#E6E1D3",line:"#BDB6A2",round:AX(3),text:"CONVEYOR / WORK TABLE",pt:6,tcolor:"#8A8983",valign:2}));
+  for(let bx=tabX1+60;bx<tabX2-40;bx+=170){ out.push(shape({name:"Garment bundle",x:AX(bx),y:AY(T(yTab+TH/2+7)),w:AX(18),h:AX(14),fill:"#9DB7D8",line:"#52514E",lw:0.5,round:AX(2),text:"▤",pt:6})); }
+  const mid=T(yTab+TH/2);
+  if(type==="U-shape"){
+    out.push(line(AX(tabX1+8),AY(mid-8),AX(tabX2-10),AY(mid-8),{dash:true,name:"Flow"}));
+    out.push(line(AX(tabX2-10),AY(mid-8),AX(tabX2-10),AY(mid+8),{dash:true,name:"Flow"}));
+    out.push(line(AX(tabX2-10),AY(mid+8),AX(tabX1+10),AY(mid+8),{dash:true,arrow:true,name:"Flow"}));
+    out.push(text(AX(4),AY(mid),AX(tabX1-6),AX(14),"Input ▸",{pt:8,align:2}));
+    out.push(text(AX(4),AY(mid+16),AX(tabX1-6),AX(14),"◂ Output",{pt:8,bold:true,align:2}));
+  } else {
+    out.push(line(AX(tabX1+8),AY(mid),AX(tabX2-10),AY(mid),{dash:true,arrow:true,name:"Flow"}));
+    out.push(text(AX(4),AY(mid+7),AX(tabX1-6),AX(14),"Input ▸",{pt:8,align:2}));
+    out.push(text(AX(tabX2+4),AY(mid+7),AX(RM-54),AX(14),"Output ▸",{pt:8,bold:true,align:0}));
+  }
+  // section labels
+  const runs=[]; [0,1].forEach(sd=>{ let cur=null; units.filter(u=>u.side===sd).forEach(u=>{ if(!cur||cur.sec!==u.op.section){ cur={sec:u.op.section,side:sd,xs:[]}; runs.push(cur);} cur.xs.push(u.x); }); });
+
+  runs.forEach(g=>{ const a=LM+Math.min(...g.xs), b=LM+Math.max(...g.xs)+fs.SW, top=g.side===0;
+    const ly = top? T(yLab+6) : T(yLabB-10);
+    out.push(line(AX(a),AY(ly),AX(b),AY(ly),{color:"#8A8983",lw:0.75,name:"Section bracket"}));
+    out.push(text(AX(a),top?AY(ly-2):AY(ly+16),AX(b-a),AX(14),g.sec.toUpperCase(),{pt:8,bold:true,color:"#52514E",name:"Section "+g.sec}));
+  });
+  // stations (each = Visio group with shape data): table, machine top view, operator
+  const bnSet=new Set(R.bn.map(o=>o.no));
+  const MACH="#DEDBD2", FAB="#9DB7D8", SKIN="#C99A74", HAIR="#2F2A26", SHIRT="#3E4A5C", INK2="#52514E", INK3="#8A8983", SURF="#FFFFFF", CRIT="#C62828";
+  units.forEach((u,i)=>{
+    const o=u.op, top=u.side===0||!two, X=LM+u.x, Y=T(top?bandT:bandB), flip=!top && $("farside").value==="mirror";
+    const col=toHex(map[o.code]), over=false, isBn=false, kind=mkind(o,u);   // exports stay clean: no balance flags
+    const gx=AX(X-4), gw=AX(fs.SW+8), gy=AY(Y+fs.BH+4), gh=AX(fs.BH+8);
+    const og={x:gx,y:gy}; const kids=[];
+    // frame point → page px (far side rotated 180°)
+    const P=([px,py])=> !flip? [X+px,Y+py] : [X+fs.SW-px, Y+fs.BH-py];
+    const rectVia=(fn,lx,ly,w,h,p)=>{ const a=P(fn(lx,ly)), b=P(fn(lx+w,ly+h));
+      const l=Math.min(a[0],b[0]), t=Math.min(a[1],b[1]), W=Math.abs(a[0]-b[0]), H=Math.abs(a[1]-b[1]);
+      return shape({...p,x:AX(l),y:AY(t+H),w:AX(W),h:AX(H)},og); };
+    const L=(lx,ly,w,h,p)=>rectVia(fs.art,lx,ly,w,h,p), O=(lx,ly,w,h,p)=>rectVia(fs.op,lx,ly,w,h,p), Fr=(lx,ly,w,h,p)=>rectVia((x,y)=>[x,y],lx,ly,w,h,p);
+    const manualish = kind==="manual"||kind==="helper", tb=fs.table;
+    kids.push(Fr(tb.x,tb.y,tb.w,tb.h,{name:manualish?"Work table":"Machine table "+o.code,fill:manualish?"#F0EFEC":col,trans:manualish?0:0.8,line:manualish?INK3:col,lw:manualish?1:1.5,dash:manualish,round:AX(4)}));
+    if(kind==="sew"){
+      kids.push(L(13,7,46,16,{name:"Machine bed",fill:SURF,line:INK3,lw:0.5,round:AX(3)}));
+      kids.push(L(5,12,17,11,{name:"Fabric",fill:FAB,line:FAB,lw:0.25}));
+      kids.push(L(21,9.5,34,8,{name:"Machine arm",fill:MACH,line:INK2,lw:0.5,round:AX(3)}));
+      kids.push(L(14,8,10,12,{name:"Machine head",fill:MACH,line:INK2,lw:0.5,round:AX(2)}));
+      kids.push(L(56.3,7.5,4.4,12,{name:"Handwheel",fill:INK2,line:INK2,lw:0.25,ellipse:true}));
+      CONE_POS.slice(0,coneCount(o.code)).forEach(([cx,cy])=>kids.push(L(cx-3.2,cy-3.2,6.4,6.4,{name:"Thread cone",fill:col,line:INK2,lw:0.4,ellipse:true})));
+    } else if(kind==="fuse"){
+      kids.push(L(4,7,62,20,{name:"Fusing belt",fill:SURF,line:INK2,lw:0.5}));
+      kids.push(L(8,11,12,12,{name:"Fabric",fill:FAB,line:FAB,lw:0.25}));
+      kids.push(L(26,4,22,26,{name:"Heater",fill:MACH,line:INK2,lw:0.5,round:AX(2)}));
+    } else if(kind==="iron"){
+      kids.push(L(5,9,58,15,{name:"Ironing board",fill:SURF,line:INK2,lw:0.5,round:AX(7)}));
+      kids.push(L(9,12,16,9,{name:"Garment",fill:FAB,line:FAB,lw:0.25}));
+      kids.push(L(22,12,17,9,{name:"Iron",fill:MACH,line:INK2,lw:0.5,round:AX(4)}));
+    } else {
+      kids.push(L(11,9,22,15,{name:"Cut panels",fill:FAB,line:FAB,lw:0.25}));
+      if(kind==="helper") kids.push(L(40,9,19,13,{name:"Bundle",fill:"#E6E1D3",line:INK3,lw:0.5,round:AX(2)}));
+    }
+    // labels (upright) in the label area
+    const lb=mirrorRect(fs.label,fs,flip), vnames=$("opnames").checked;
+    const tag=`${o.no}${Math.max(o.operators,o.machines)>1?"·"+(u.k+1):""} ${kind==="helper"?"Helper":o.code}`;
+    kids.push(shape({name:"Station label",x:AX(X+lb.x+3),y:AY(Y+lb.y+13),w:AX(lb.w-6),h:AX(12),noFill:true,noLine:true,text:tag,pt:6.5,bold:true,align:0},og));
+    if(vnames) kids.push(shape({name:"Operation",x:AX(X+lb.x+3),y:AY(Y+lb.y+29),w:AX(lb.w-6),h:AX(16),noFill:true,noLine:true,text:wrapName(o.name,Math.floor((lb.w-6)/3.4),2).join("\n"),pt:5,tcolor:"#52514E",align:0,valign:0},og));
+    if(over) kids.push(Fr(tb.x-3,tb.y-3,tb.w+6,tb.h+6,{name:"Over cycle flag",noFill:true,line:CRIT,lw:1.25,dash:true,round:AX(6)}));
+    // operator: chair, arms+hands, shoulders, head
+    if(u.hasOp){
+      const shirt= over?CRIT:SHIRT;
+      kids.push(O(-10,-17,20,9,{name:"Chair",fill:"#EFEEE9",line:INK3,lw:0.5,round:AX(3)}));
+      kids.push(O(-9,-1,4,12,{name:"Arm",fill:shirt,line:shirt,lw:0.25,round:AX(2)}));
+      kids.push(O(5,-1,4,12,{name:"Arm",fill:shirt,line:shirt,lw:0.25,round:AX(2)}));
+      kids.push(O(-8.4,9.1,4.8,4.8,{name:"Hand",fill:SKIN,line:SKIN,lw:0.25,ellipse:true}));
+      kids.push(O(3.6,9.1,4.8,4.8,{name:"Hand",fill:SKIN,line:SKIN,lw:0.25,ellipse:true}));
+      kids.push(O(-12,-9.5,24,13,{name:"Operator",fill:shirt,line:shirt,lw:0.25,ellipse:true}));
+      kids.push(O(-5.2,-7.7,10.4,10.4,{name:"Head",fill:HAIR,line:HAIR,lw:0.25,ellipse:true}));
+    } else kids.push(O(-10,-17,20,9,{name:"Empty chair",noFill:true,line:INK3,lw:0.75,dash:true,round:AX(3)}));
+    if(isBn){ const br=mirrorRect({x:fs.badge.x,y:fs.badge.y,w:24,h:14},fs,flip); kids.push(shape({name:"Bottleneck",x:AX(X+br.x),y:AY(Y+br.y+14),w:AX(24),h:AX(14),fill:CRIT,line:CRIT,round:AX(7),text:"BN",pt:6,bold:true,tcolor:"#FFFFFF"},og)); }
+    const props=[["OpNo","Op No",o.no],["Section","Section",o.section],["Operation","Operation",o.name],["Machine","Machine code",o.code],["Station","Station",`${u.k+1} of ${Math.max(o.operators,o.machines)}`],["SMV","SMV (min)",o.smv.toFixed(2)],["Operators","Operators",o.operators],["Machines","Machines",o.machines],["Cycle","Cycle / operator (min)",isFinite(o.cycle)?o.cycle.toFixed(3):"-"],["Load","Load %",Math.round(o.load*100)]];
+    let g=`<Shape ID="${id++}" NameU="Station ${xe(o.no)}-${u.k+1}" Name="Station ${xe(o.no)}-${u.k+1}" Type="Group" LineStyle="0" FillStyle="0" TextStyle="0">`;
+    g+=C("PinX",gx+gw/2)+C("PinY",gy+gh/2)+C("Width",gw)+C("Height",gh)+C("LocPinX",gw/2)+C("LocPinY",gh/2)+C("Angle",0);
+    g+=propSec(props)+`<Shapes>${kids.join("")}</Shapes></Shape>`;
+    out.push(g);
+  });
+  // legend
+  const ly0=TOP+layoutH+16;
+  out.push(text(AX(20),AY(ly0+18),AX(300),AX(18),"Legend",{pt:10,bold:true,align:0}));
+  const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const n=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0);
+    return {fill:toHex(map[cd]),line:toHex(map[cd]),trans:0.78,t:`${cd} – ${m?.desc||""}${n?` (${n})`:""}`}; });
+  items.push({fill:"#52514E",line:"#FFFFFF",ell:true,t:"Operator"},{fill:"#F0EFEC",line:"#8A8983",dash:true,t:"Manual / helper table"});
+  items.forEach((it,i)=>{ const cx=20+(i%perRow)*300, cy=ly0+30+Math.floor(i/perRow)*30;
+    out.push(shape({name:"Legend key",x:AX(cx),y:AY(cy+16),w:AX(22),h:AX(16),fill:it.fill,trans:it.trans||0,noFill:it.noFill,line:it.line,lw:1.25,dash:it.dash,ellipse:it.ell,round:it.ell?0:AX(3)}));
+    out.push(text(AX(cx+30),AY(cy+16),AX(260),AX(16),it.t,{pt:8,align:0,name:"Legend text"}));
+  });
+
+  const PW=AX(Wpx), PH=AX(Hpx);
+  const NS=`xmlns="http://schemas.microsoft.com/office/visio/2012/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`;
+  const X='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  const parts={};
+  parts["[Content_Types].xml"]=X+`<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/visio/document.xml" ContentType="application/vnd.ms-visio.drawing.main+xml"/><Override PartName="/visio/pages/pages.xml" ContentType="application/vnd.ms-visio.pages+xml"/><Override PartName="/visio/pages/page1.xml" ContentType="application/vnd.ms-visio.page+xml"/><Override PartName="/visio/windows.xml" ContentType="application/vnd.ms-visio.windows+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
+  parts["_rels/.rels"]=X+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.microsoft.com/visio/2010/relationships/document" Target="visio/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`;
+  parts["docProps/core.xml"]=X+`<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xe((I.lineName||"Line")+" layout")}</dc:title><dc:creator>Stitching Line Layout Builder</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().slice(0,19)}Z</dcterms:created></cp:coreProperties>`;
+  parts["docProps/app.xml"]=X+`<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>Microsoft Visio</Application><AppVersion>15.0000</AppVersion></Properties>`;
+  parts["visio/_rels/document.xml.rels"]=X+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.microsoft.com/visio/2010/relationships/pages" Target="pages/pages.xml"/><Relationship Id="rId2" Type="http://schemas.microsoft.com/visio/2010/relationships/windows" Target="windows.xml"/></Relationships>`;
+  parts["visio/document.xml"]=X+`<VisioDocument ${NS} xml:space="preserve"><DocumentSettings TopPage="0" DefaultTextStyle="0" DefaultLineStyle="0" DefaultFillStyle="0" DefaultGuideStyle="0"><GlueSettings>9</GlueSettings><SnapSettings>65847</SnapSettings><SnapExtensions>34</SnapExtensions><SnapAngles/><DynamicGridEnabled>1</DynamicGridEnabled><ProtectStyles>0</ProtectStyles><ProtectShapes>0</ProtectShapes><ProtectMasters>0</ProtectMasters><ProtectBkgnds>0</ProtectBkgnds></DocumentSettings><Colors><ColorEntry IX="0" RGB="#000000"/><ColorEntry IX="1" RGB="#FFFFFF"/></Colors><FaceNames><FaceName NameU="Calibri" UnicodeRanges="-536859905 -1073732485 9 0" CharSets="536871327 0" Panos="2 15 5 2 2 2 4 3 2 4" Flags="325"/></FaceNames><StyleSheets><StyleSheet ID="0" NameU="No Style" IsCustomNameU="1" Name="No Style" IsCustomName="1">`
+   +[["EnableLineProps",1],["EnableFillProps",1],["EnableTextProps",1],["HideForApply",0],["LineWeight",0.01041666666666667],["LineColor","#000000"],["LinePattern",1],["Rounding",0],["EndArrowSize",2],["BeginArrow",0],["EndArrow",0],["LineCap",0],["BeginArrowSize",2],["LineColorTrans",0],["CompoundType",0],["FillForegnd","#FFFFFF"],["FillBkgnd","#000000"],["FillPattern",1],["ShdwForegnd","#000000"],["ShdwPattern",0],["FillForegndTrans",0],["FillBkgndTrans",0],["ShdwForegndTrans",0],["ShapeShdwType",0],["ShapeShdwOffsetX",0],["ShapeShdwOffsetY",0],["ShapeShdwObliqueAngle",0],["ShapeShdwScaleFactor",1],["ShapeShdwBlur",0],["ShapeShdwShow",0],["LeftMargin",0],["RightMargin",0],["TopMargin",0],["BottomMargin",0],["VerticalAlign",1],["TextBkgnd",0],["DefaultTabStop",0.5],["TextDirection",0],["TextBkgndTrans",0]].map(([n,v])=>C(n,v)).join("")
+   +`<Section N="Character"><Row IX="0">${C("Font","Calibri")}${C("Color","#000000")}${C("Style",0)}${C("Case",0)}${C("Pos",0)}${C("FontScale",1)}${C("Size",0.1666666666666667)}${C("DblUnderline",0)}${C("Overline",0)}${C("Strikethru",0)}${C("DoubleStrikethrough",0)}${C("Letterspace",0)}${C("ColorTrans",0)}${C("LangID","en-US")}</Row></Section><Section N="Paragraph"><Row IX="0">${C("IndFirst",0)}${C("IndLeft",0)}${C("IndRight",0)}${C("SpLine",-1.2)}${C("SpBefore",0)}${C("SpAfter",0)}${C("HorzAlign",1)}${C("Bullet",0)}${C("BulletStr","")}${C("BulletFont",0)}${C("BulletFontSize",-1)}${C("TextPosAfterBullet",0)}${C("Flags",0)}</Row></Section></StyleSheet></StyleSheets></VisioDocument>`;
+  parts["visio/windows.xml"]=X+`<Windows ClientWidth="1600" ClientHeight="900" ${NS} xml:space="preserve"><Window ID="0" WindowType="Drawing" WindowState="1073741824" WindowLeft="-8" WindowTop="-31" WindowWidth="1616" WindowHeight="939" ContainerType="Page" Page="0" ViewScale="-1" ViewCenterX="${r4(PW/2)}" ViewCenterY="${r4(PH/2)}"><ShowRulers>1</ShowRulers><ShowGrid>1</ShowGrid><ShowPageBreaks>0</ShowPageBreaks><ShowGuides>1</ShowGuides><ShowConnectionPoints>1</ShowConnectionPoints><GlueSettings>9</GlueSettings><SnapSettings>65847</SnapSettings><SnapExtensions>34</SnapExtensions><SnapAngles/><DynamicGridEnabled>1</DynamicGridEnabled><TabSplitterPos>0.5</TabSplitterPos></Window></Windows>`;
+  parts["visio/pages/_rels/pages.xml.rels"]=X+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.microsoft.com/visio/2010/relationships/page" Target="page1.xml"/></Relationships>`;
+  parts["visio/pages/pages.xml"]=X+`<Pages ${NS} xml:space="preserve"><Page ID="0" NameU="Line Layout" Name="Line Layout" ViewScale="-1" ViewCenterX="${r4(PW/2)}" ViewCenterY="${r4(PH/2)}"><PageSheet LineStyle="0" FillStyle="0" TextStyle="0">${C("PageWidth",PW)}${C("PageHeight",PH)}${C("ShdwOffsetX",0.125)}${C("ShdwOffsetY",-0.125)}${C("PageScale",0.25,"IN_F")}${C("DrawingScale",12,"FT")}${C("DrawingSizeType",3)}${C("DrawingScaleType",3)}${C("InhibitSnap",0)}${C("PageLockReplace",0,"BOOL")}${C("PageLockDuplicate",0,"BOOL")}${C("UIVisibility",0)}${C("ShdwType",0)}${C("ShdwObliqueAngle",0)}${C("ShdwScaleFactor",1)}${C("DrawingResizeType",1)}${C("PageShapeSplit",1)}</PageSheet><Rel r:id="rId1"/></Page></Pages>`;
+  parts["visio/pages/page1.xml"]=X+`<PageContents ${NS} xml:space="preserve"><Shapes>${out.join("")}</Shapes></PageContents>`;
+  return parts;
+}
+
+let dlNS; // downloads namespace: undefined = not asked yet, null = unavailable
+async function getDownloads(){
+  if(dlNS!==undefined) return dlNS;
+  try{ dlNS = (window.claude && typeof window.claude.use==="function") ? await window.claude.use("downloads") : null; }catch(e){ dlNS=null; }
+  return dlNS;
+}
+// Save a generated file: Claude's save prompt inside claude.ai, a normal browser download everywhere else
+async function saveFile(filename,data){
+  const inClaude = !!(window.claude && typeof window.claude.use==="function");
+  if(inClaude){ const dl=await getDownloads(); if(!dl) throw {code:"unavailable"}; return dl.save({filename,data}); }
+  const blob = data instanceof Blob ? data : new Blob([data]);
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+  return {status:"saved"};
+}
+async function generateVisio(){
+  const st=$("vstat"), btn=$("visio");
+  const say=(t,bad)=>{ st.textContent=t; st.style.color=bad?"var(--crit)":"var(--ink-2)"; };
+  if(!lastR) return;
+  if(typeof JSZip==="undefined"){ say("The zip library didn't load – check your connection and reload the page.",true); return; }
+  btn.disabled=true; say("Building Visio file…");
+  try{
+    const parts=buildVsdxParts(lastR);
+    const inner=new JSZip(); Object.keys(parts).forEach(p=>inner.file(p,parts[p],{createFolders:false}));
+    const vsdx=await inner.generateAsync({type:"uint8array",compression:"DEFLATE"});
+    const base=String(data.info.lineName||"Line").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_")+"_"+$("ltype").value.replace(/\W+/g,"")+"_layout";
+    const outer=new JSZip();
+    outer.file(base+".vsdx",vsdx);
+    outer.file("README.txt",`Unzip this folder, then open ${base}.vsdx in Microsoft Visio (2013 or later).\r\n\r\nEvery station is a group you can move, copy or delete. Select a station and open Data > Shape Data to see its operation, SMV, operators, cycle time and status.\r\nDrawing scale is 1/4" = 1'-0"; machines are drawn about 4 ft x 2.5 ft.\r\n`);
+    const blob=await outer.generateAsync({type:"blob",compression:"DEFLATE"});
+    await saveFile(base+"_Visio.zip",blob);
+    say(`Saved ${base}_Visio.zip – unzip it and open the .vsdx in Visio.`);
+  }catch(e){
+    const c=e&&e.code;
+    if(c==="declined") say("Download cancelled.");
+    else if(c==="rate_limited") say("A save prompt is already open – try again in a moment.",true);
+    else if(c==="unavailable") say("Saving files isn't available in this view.",true);
+    else if(c) say("Couldn't save the file here ("+c+").",true);
+    else say("Couldn't build the Visio file: "+(e&&e.message||e),true);
+  }finally{ btn.disabled=false; }
+}
+
+/* ---------------- PDF report ---------------- */
+const LIGHT={"--bg":"#f4f3ef","--surface":"#fcfcfb","--surface-2":"#efeee9","--line":"#dcdad3","--grid":"#e8e6df","--ink":"#0b0b0b","--ink-2":"#52514e","--ink-3":"#8a8983","--accent":"#1f3a5f","--crit":"#c62828","--warn":"#b26a00","--good":"#2e7d32","--table":"#e6e1d3","--table-stroke":"#bdb6a2","--mach":"#dedbd2","--fabric":"#9db7d8","--skin":"#c99a74","--hair":"#2f2a26","--shirt":"#3e4a5c",...VHEX};
+// serialize an on-screen SVG for print: light colours, bundles frozen in place, no selection
+function svgForPrint(svg,scale){
+  const clone=svg.cloneNode(true), vb=svg.viewBox.baseVal;
+  clone.setAttribute("width",Math.round(vb.width*scale)); clone.setAttribute("height",Math.round(vb.height*scale));
+  const live=svg.querySelector("#flowP");
+  if(live){ const len=live.getTotalLength(), am=[...svg.querySelectorAll("animateMotion")], cm=[...clone.querySelectorAll("animateMotion")];
+    am.forEach((a,i)=>{ const beg=Math.abs(parseFloat(a.getAttribute("begin"))||0), dur=parseFloat(a.getAttribute("dur"))||1;
+      const pt=live.getPointAtLength(((beg%dur)/dur)*len); cm[i].parentNode.setAttribute("transform",`translate(${pt.x} ${pt.y})`); cm[i].remove(); }); }
+  clone.querySelectorAll(".sel").forEach(e=>e.classList.remove("sel"));
+  clone.querySelectorAll("[stroke-width='3']").forEach(e=>e.setAttribute("stroke-width","2"));
+  return new XMLSerializer().serializeToString(clone).replace(/var\((--[\w-]+)\)/g,(m,n)=>LIGHT[n]||"#888888");
+}
+async function svgToCanvas(svg,scale){
+  const vb=svg.viewBox.baseVal; let s=scale;
+  while(vb.width*s*vb.height*s>14e6 && s>0.5) s-=0.25;           // stay inside mobile canvas limits
+  const img=new Image(); img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svgForPrint(svg,s));
+  await img.decode();
+  const c=document.createElement("canvas"); c.width=Math.round(vb.width*s); c.height=Math.round(vb.height*s);
+  const ctx=c.getContext("2d"); ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(img,0,0,c.width,c.height);
+  return {canvas:c,scale:s,w:vb.width,h:vb.height};
+}
+const canvasPng=c=>new Promise((res,rej)=>c.toBlob(b=>b?b.arrayBuffer().then(res,rej):rej(new Error("Couldn't render the image")),"image/png"));
+
+async function buildPdfBytes(){
+  const {PDFDocument,StandardFonts,rgb}=PDFLib;
+  const R=lastR, I=data.info, doc=await PDFDocument.create();
+  doc.setTitle(`${I.lineName||"Line"} layout`); doc.setCreator("Stitching Line Layout Builder");
+  const F=await doc.embedFont(StandardFonts.Helvetica), FB=await doc.embedFont(StandardFonts.HelveticaBold);
+  const cs=new Set(F.getCharacterSet()); const safe=t=>[...String(t??"")].map(ch=>cs.has(ch.codePointAt(0))?ch:(ch==="▲"?"^":ch==="▸"?">":ch==="◂"?"<":"-")).join("");
+  const hex=h=>{ h=String(h).replace("#",""); if(h.length===3) h=h.split("").map(c=>c+c).join(""); const n=parseInt(h.slice(0,6),16); return rgb((n>>16&255)/255,(n>>8&255)/255,(n&255)/255); };
+  const INK=hex("#0b0b0b"), INK2=hex("#52514e"), INK3=hex("#8a8983"), LINE=hex("#dcdad3"), CRIT=hex("#c62828"), ACC=hex("#1f3a5f");
+  const SIZES={A3:[1190.55,841.89],A2:[1683.78,1190.55],A1:[2383.94,1683.78],A0:[3370.39,2383.94]};
+  const M=36; let PW, PH, AW, page, y;
+  const text=(t,x,yy,o={})=>page.drawText(safe(t),{x,y:yy,size:o.size||9,font:o.bold?FB:F,color:o.color||INK});
+  const textR=(t,xr,yy,o={})=>{ const s=safe(t), f=o.bold?FB:F, sz=o.size||9; page.drawText(s,{x:xr-f.widthOfTextAtSize(s,sz),y:yy,size:sz,font:f,color:o.color||INK}); };
+  const fit=(t,w,sz,f=F)=>{ let s=safe(t); if(f.widthOfTextAtSize(s,sz)<=w) return s; while(s.length>1 && f.widthOfTextAtSize(s+"...",sz)>w) s=s.slice(0,-1); return s+"..."; };
+  const orientTxt=$("orient").selectedOptions[0].text, typeTxt=$("ltype").value, far=$("farside").disabled?"":` · far side: ${$("farside").value==="mirror"?"mirrored":"same direction"}`;
+  function newPage(size="A3"){
+    [PW,PH]=SIZES[size]; AW=PW-2*M;
+    page=doc.addPage([PW,PH]);
+    text(`${I.lineName||"Line layout"}${I.style?"  –  "+I.style:""}${I.buyer?"  ·  "+I.buyer:""}`,M,PH-M-14,{size:15,bold:true});
+    textR(new Date().toISOString().slice(0,10),PW-M,PH-M-12,{size:9,color:INK3});
+    text(`${typeTxt} layout · ${orientTxt}${far} · Target ${I.target} pcs/day · ${I.hours} h/day · Planned efficiency ${Math.round(I.eff*100)}%`,M,PH-M-30,{size:9,color:INK2});
+    page.drawLine({start:{x:M,y:PH-M-38},end:{x:PW-M,y:PH-M-38},thickness:0.75,color:LINE});
+    y=PH-M-52;
+  }
+  const need=h=>{ if(y-h<M+18) newPage(); };
+  const heading=(t,x=M)=>{ need(30); text(t,x,y-12,{size:12,bold:true}); y-=24; };
+  let TX=M; // left edge for drawTable
+
+  // render the layout first: the chosen PDF layout mode decides the first page's size
+  const mode=$("pdfmode").value, lsvg=cleanLayoutSvg(R), L=await svgToCanvas(lsvg,2.5), ptPerUnit=0.62; lsvg.parentNode.remove();
+  let firstSize="A3";
+  if(mode==="one") firstSize=["A3","A2","A1","A0"].find(k=>SIZES[k][0]-2*M>=L.w*ptPerUnit)||"A0";
+  newPage(firstSize);
+
+  const headTxt=mode==="strips"?"Line layout":`Line layout – whole line${mode==="one"?` (${firstSize} sheet)`:""}`;
+  if(mode==="strips") heading(headTxt);
+  const maxUnits=AW/ptPerUnit, n= mode!=="strips" ? 1 : (L.w<=maxUnits*1.15?1:Math.ceil(L.w/maxUnits));
+  // cut points snap to the aisle between station columns so no station is split
+  const fsP=frameSpec(), xs=[...new Set(buildLayout(R).units.map(u=>u.x))].sort((a,b)=>a-b);
+  const gaps=xs.slice(1).map((x,i)=>LM+(xs[i]+fsP.SW+x)/2);
+  const cuts=[0]; for(let i=1;i<n;i++){ const t=i*L.w/n; cuts.push(gaps.length?gaps.reduce((a,g)=>Math.abs(g-t)<Math.abs(a-t)?g:a):t); } cuts.push(L.w);
+  const widest=Math.max(...cuts.slice(1).map((c,i)=>c-cuts[i]));
+  const sc=Math.min(AW/widest, mode==='strips'?1.2:1.5), stripH=L.h*sc;
+  // legend set-up first: it sits centred under the layout, as wide as the layout
+  const {map,order}=colorMap(); const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const cnt=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0); return [toHex(map[cd]),`${cd}  ${m?.desc||""}${cnt?` (${cnt})`:""}`]; });
+  items.push(["#3e4a5c","Operator"],["#efeee9","Manual / helper table"]);
+  const legW=Math.min(AW,Math.max(widest*sc,640)), legX=M+(AW-legW)/2, per=Math.max(3,Math.floor(legW/270)), cw=legW/per, legRows=Math.ceil(items.length/per), legH=18+legRows*16;
+  // whole-line modes: centre the layout + legend block vertically in the space under the heading
+  if(mode!=="strips"){ const blockH=24+12+stripH+22+legH+(24+72)+(24+15*(new Set(R.ops.map(o=>o.code)).size+2)+16), avail=y-(M+18); if(avail>blockH) y-=(avail-blockH)/2;
+    text(headTxt,M+(AW-widest*sc)/2,y-12,{size:12,bold:true}); y-=24; }
+  for(let i=0;i<n;i++){
+    need(stripH+18);
+    const chunk=cuts[i+1]-cuts[i], iw=chunk*sc, ix=M+(AW-iw)/2;
+    const c=document.createElement("canvas"); const sx=Math.round(cuts[i]*L.scale), sw=Math.round(chunk*L.scale);
+    c.width=sw; c.height=L.canvas.height; c.getContext("2d").drawImage(L.canvas,sx,0,sw,c.height,0,0,sw,c.height);
+    const img=await doc.embedPng(await canvasPng(c));
+    if(n>1) text(`Part ${i+1} of ${n}${i<n-1?"  –  line continues in the next strip":"  –  end of line"}`,ix,y-9,{size:8,color:INK3});
+    page.drawImage(img,{x:ix,y:y-12-stripH,width:iw,height:stripH});
+    page.drawRectangle({x:ix,y:y-12-stripH,width:iw,height:stripH,borderColor:LINE,borderWidth:0.5});
+    y-=stripH+22;
+  }
+  // legend
+  need(legH);
+  text("Legend",legX,y-10,{size:9,bold:true}); y-=18;
+  items.forEach(([c,t],i)=>{ const x=legX+(i%per)*cw, yy=y-Math.floor(i/per)*16;
+    page.drawRectangle({x,y:yy-9,width:14,height:10,color:hex(c),opacity:i<order.length?0.35:1,borderColor:hex(c),borderWidth:1.2});
+    text(fit(t,cw-24,8),x+20,yy-7,{size:8,color:INK2}); });
+  y-=legRows*16+10;
+
+  // page 1 continues: line summary + machine requirement, aligned with the layout
+  need(100); heading("Line summary",legX);
+  const k=[["Total SMV",R.totalSMV.toFixed(2),"min per garment"],["Takt time",R.takt.toFixed(3),`required cycle ${R.req.toFixed(3)} min`],
+    ["Operators",String(R.totalOps),`theoretical ${R.theoMP.toFixed(1)}`],["Machines",String(R.totalMc),`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
+    ["Bottleneck",R.bnCycle.toFixed(3),R.bn.length>1?`${R.bn.length} ops tie: Op ${R.bn.slice(0,3).map(o=>o.no).join(", ")}${R.bn.length>3?"...":""}`:`Op ${R.bn[0].no} – ${R.bn[0].name}`],
+    ["Line balance",(R.balEff*100).toFixed(1)+"%","SMV / (operators x BN cycle)"],["Expected output",Math.floor(R.outHr)+"/h",`${Math.floor(R.outDay)} per day vs ${I.target}`]];
+  need(64);
+  const kw=(legW-6*8)/7;
+  k.forEach(([l,v,sub],i)=>{ const x=legX+i*(kw+8);
+    page.drawRectangle({x,y:y-56,width:kw,height:56,borderColor:LINE,borderWidth:0.75,color:hex("#fcfcfb")});
+    text(l,x+8,y-14,{size:8,color:INK2}); text(v,x+8,y-34,{size:17,bold:true,color:(l==="Bottleneck"&&R.bnCycle>R.req)||(l==="Expected output"&&R.outDay<I.target)?CRIT:INK});
+    text(fit(sub,kw-14,7),x+8,y-48,{size:7,color:INK3}); });
+  y-=72;
+  need(80); heading("Machine requirement",legX);
+  const by={}; R.ops.forEach(o=>{ (by[o.code] ||= {mc:0,op:0,smv:0}); by[o.code].mc+=o.machines; by[o.code].op+=o.operators; by[o.code].smv+=o.smv; });
+  const mcols=[["Code",70,"l"],["Description",280,"l"],["Machines",80,"r"],["Operators",80,"r"],["SMV",80,"r"]];
+  const mrows=order.filter(cd=>by[cd]).map(cd=>[cd,data.machines.find(x=>x.code===cd)?.desc||"",by[cd].mc,by[cd].op,by[cd].smv.toFixed(2)]);
+  mrows.push(["Total","",R.totalMc,R.totalOps,R.totalSMV.toFixed(2)]);
+  TX=legX; drawTable(mcols,mrows,(r,i)=>i===mrows.length-1?{bold:true}:{}); TX=M;
+
+  // further pages: balance chart, then the operation breakdown
+  newPage();
+  const csvg=$("chart").querySelector("svg"); const Cc=await svgToCanvas(csvg,2.5);
+  const cimg=await doc.embedPng(await canvasPng(Cc.canvas)); const cwid=Math.min(AW,Cc.w*1.3), chh=Cc.h*cwid/Cc.w;
+  heading("Line balance – cycle time per operator vs required cycle");
+  page.drawImage(cimg,{x:M,y:y-chh,width:cwid,height:chh}); y-=chh+20;
+  // bottleneck & balancing suggestions (separate from the layout)
+  const A=balanceAdvice(R);
+  const wrapPdf=(t,w,sz,f=F)=>{ const words=safe(t).split(" "), lines=[]; let cur="";
+    words.forEach(wd=>{ const tr=cur?cur+" "+wd:wd; if(f.widthOfTextAtSize(tr,sz)<=w) cur=tr; else { if(cur) lines.push(cur); cur=wd; } }); if(cur) lines.push(cur); return lines; };
+  need(60); heading("Bottleneck & balancing suggestions");
+  wrapPdf(A.summary,AW,9).forEach(l=>{ need(13); text(l,M,y-10,{size:9,color:INK2}); y-=13; }); y-=6;
+  A.items.forEach(it=>{
+    const col=it.level==="info"?INK3:CRIT, tl=wrapPdf(it.title,AW-16,9.5,FB), dl=wrapPdf(it.detail,AW-16,8.5), al=it.acts.map(a=>wrapPdf(a,AW-30,8.5));
+    const h=tl.length*13+dl.length*12+al.reduce((a,l)=>a+l.length*12,0)+10; need(Math.min(h,200));
+    const top=y; tl.forEach(l=>{ text(l,M+10,y-10,{size:9.5,bold:true}); y-=13; }); dl.forEach(l=>{ text(l,M+10,y-10,{size:8.5,color:INK2}); y-=12; });
+    al.forEach(ls=>ls.forEach((l,j)=>{ need(12); if(j===0) text("-",M+14,y-10,{size:8.5}); text(l,M+22,y-10,{size:8.5}); y-=12; }));
+    page.drawRectangle({x:M,y:y-2,width:2.5,height:Math.max(8,top-y),color:col}); y-=10;
+  });
+  y-=6;
+
+  // operation breakdown
+  need(150); heading("Operation breakdown");
+  const ocols=[["Op",36,"r"],["Section",86,"l"],["Operation",250,"l"],["M/C",56,"l"],["SMV",56,"r"],["Theo MP",62,"r"],["Operators",64,"r"],["Machines",64,"r"],["Cycle",62,"r"],["Cap/h",56,"r"],["Load %",56,"r"],["Status",130,"l"]];
+  const orows=R.ops.map(o=>[o.no,o.section,o.name,o.code,o.smv.toFixed(2),o.theo.toFixed(2),o.operators+(o.autoOps?"*":""),o.machines,isFinite(o.cycle)?o.cycle.toFixed(3):"-",Math.floor(o.cap),Math.round(o.load*100),R.bn.includes(o)?"Bottleneck":o.load>1.0001?"Over required cycle":"OK"]);
+  drawTable(ocols,orows,(r)=>r[11]!=="OK"?{statusColor:CRIT}:{});
+  need(30); text("Required cycle = takt time x planned efficiency. Line balance = total SMV / (operators x bottleneck cycle). * = operators allocated automatically.",M,y-10,{size:7.5,color:INK3});
+
+  function drawTable(cols,rows,style){
+    const rh=15, head=()=>{ need(rh*2); let x=TX; page.drawRectangle({x:TX,y:y-rh,width:cols.reduce((a,c)=>a+c[1],0),height:rh,color:hex("#efeee9")});
+      cols.forEach(([h,w,al])=>{ al==="r"?textR(h,x+w-5,y-10.5,{size:8,bold:true,color:INK2}):text(h,x+5,y-10.5,{size:8,bold:true,color:INK2}); x+=w; }); y-=rh; };
+    head();
+    rows.forEach((r,i)=>{ if(y-rh<M+18){ newPage(); head(); }
+      const st=style(r,i); let x=TX;
+      cols.forEach(([h,w,al],j)=>{ const v=fit(r[j],w-10,8,st.bold?FB:F), col=(j===cols.length-1&&st.statusColor)?st.statusColor:INK;
+        al==="r"?textR(v,x+w-5,y-10.5,{size:8,bold:st.bold,color:col}):text(v,x+5,y-10.5,{size:8,bold:st.bold,color:col}); x+=w; });
+      page.drawLine({start:{x:TX,y:y-rh},end:{x:TX+cols.reduce((a,c)=>a+c[1],0),y:y-rh},thickness:0.5,color:LINE}); y-=rh; });
+    y-=16;
+  }
+  // page numbers
+  const pages=doc.getPages(); pages.forEach((p,i)=>{ const s=`Page ${i+1} of ${pages.length}`; p.drawText(s,{x:p.getSize().width-M-F.widthOfTextAtSize(s,8),y:M-14,size:8,font:F,color:INK3}); p.drawText("Stitching Line Layout Builder",{x:M,y:M-14,size:8,font:F,color:INK3}); });
+  return await doc.save();
+}
+async function generatePdf(){
+  const st=$("vstat"), btn=$("pdfbtn");
+  const say=(t,bad)=>{ st.textContent=t; st.style.color=bad?"var(--crit)":"var(--ink-2)"; };
+  if(!lastR) return;
+  if(typeof PDFLib==="undefined"){ say("The PDF library didn't load – check your connection and reload the page.",true); return; }
+  btn.disabled=true; say("Building PDF…");
+  try{
+    const bytes=await buildPdfBytes();
+    const base=String(data.info.lineName||"Line").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_")+"_"+$("ltype").value.replace(/\W+/g,"")+"_layout";
+    await saveFile(base+".pdf",new Blob([bytes],{type:"application/pdf"}));
+    say(`Saved ${base}.pdf`);
+  }catch(e){
+    const c=e&&e.code;
+    if(c==="declined") say("Download cancelled.");
+    else if(c==="rate_limited") say("A save prompt is already open – try again in a moment.",true);
+    else if(c==="unavailable") say("Saving files isn't available in this view.",true);
+    else if(c) say("Couldn't save the file here ("+c+").",true);
+    else say("Couldn't build the PDF: "+(e&&e.message||e),true);
+  }finally{ btn.disabled=false; }
+}
+
+
+/* ---------------- bottleneck & balancing suggestions ---------------- */
+function cleanLayoutSvg(R){ // off-screen copy of the layout with no balance flags (for the PDF)
+  const d=document.createElement("div"); d.style.cssText="position:absolute;left:-99999px;top:0;visibility:hidden";
+  d.innerHTML=drawLayout(R,{flags:false,stringOnly:true}); document.body.appendChild(d); return d.querySelector("svg");
+}
+function balanceAdvice(R){
+  const req=R.req, I=data.info, idx=o=>R.ops.indexOf(o), spare=o=>o.operators*req-o.smv;
+  const opLbl=o=>`Op ${o.no} ${o.name} (${o.code})`;
+  const items=[];
+  // 1. operations slower than the required cycle
+  R.ops.filter(o=>o.load>1.0001).sort((a,b)=>b.load-a.load).forEach(o=>{
+    const need=Math.ceil(o.smv/req-1e-9), add=need-o.operators, deficit=o.smv-o.operators*req;
+    const cands=R.ops.filter(p=>p!==o && spare(p)>=deficit-1e-9)
+      .map(p=>({p,d:Math.abs(idx(p)-idx(o)),same:p.code===o.code?1:0})).sort((a,b)=>(b.same-a.same)||(a.d-b.d)).slice(0,2);
+    const acts=[`Add ${add} operator${add>1?"s":""}${o.machines>0?` and ${add} ${o.code} machine${add>1?"s":""}`:""} (${o.operators} → ${need}); cycle drops to ${(o.smv/need).toFixed(3)} min.`];
+    acts.push(cands.length
+      ? `Or move about ${deficit.toFixed(2)} min of work per piece to ${cands.map(c=>`${opLbl(c.p)}, ${Math.round(c.p.load*100)}% loaded`).join(" or ")}.`
+      : `No single operation has enough spare time to absorb ${deficit.toFixed(2)} min; look at a method improvement to cut the SMV.`);
+    items.push({level:R.bn.includes(o)?"bn":"over",title:`${R.bn.includes(o)?"Bottleneck":"Over required cycle"}: ${opLbl(o)}`,
+      detail:`${Math.round(o.load*100)}% load – cycle ${o.cycle.toFixed(3)} min per operator vs required ${req.toFixed(3)} min.`,acts});
+  });
+  // 2. bottleneck exactly at the limit (no overload)
+  const atLimit=R.bn.filter(o=>o.load<=1.0001);
+  if(atLimit.length) items.push({level:"info",title:`Bottleneck at the limit: ${atLimit.map(o=>`Op ${o.no}`).join(", ")}`,
+    detail:`${atLimit.length>1?"These operations run":"This operation runs"} at ${Math.round(atLimit[0].load*100)}% of the required cycle (${R.bnCycle.toFixed(3)} min). The line meets target but has no spare capacity here.`,
+    acts:[`To lift output above ${Math.floor(R.outHr)}/h, add capacity at ${atLimit.length>1?"these operations":"this operation"} first.`]});
+  // 3. under-loaded operations and combinable pairs
+  const under=R.ops.filter(o=>o.load<0.7);
+  if(under.length){
+    const acts=[]; const used=new Set();
+    for(let i=0;i<under.length;i++) for(let j=i+1;j<under.length;j++){
+      const a=under[i], b=under[j]; if(used.has(a)||used.has(b)||a.code!==b.code||Math.abs(idx(a)-idx(b))>4) continue;
+      const tot=a.operators+b.operators, needed=Math.ceil((a.smv+b.smv)/req-1e-9);
+      if(needed<tot){ acts.push(`Combine Op ${a.no} and Op ${b.no} (both ${a.code}): ${needed} operator${needed>1?"s":""} instead of ${tot}, saving ${tot-needed}.`); used.add(a); used.add(b); }
+    }
+    acts.push("Spare time at these stations can also be used to help the neighbouring bottleneck or over-cycle operations.");
+    items.push({level:"info",title:`Under-loaded (below 70%): ${under.map(o=>`Op ${o.no} (${Math.round(o.load*100)}%)`).join(", ")}`,
+      detail:"These operators have idle time each cycle.",acts});
+  }
+  const ok=R.outDay>=I.target;
+  const summary=`Expected output ${Math.floor(R.outHr)} pcs/h (${Math.floor(R.outDay)} per day) against a target of ${I.target} – ${ok?"target met":"short of target by "+(I.target-Math.floor(R.outDay))+" pcs/day"}. Line balance ${(R.balEff*100).toFixed(1)}%; ${R.totalOps} operators against ${R.theoMP.toFixed(1)} theoretical.`;
+  if(!items.length) items.push({level:"info",title:"Well balanced",detail:"No operation exceeds the required cycle and none is under 70% loaded.",acts:[]});
+  return {summary,items};
+}
+function drawAdvice(R){
+  const A=balanceAdvice(R), ic={bn:"▲",over:"!",info:"•"};
+  $("advice").innerHTML=`<p class="adv-sum">${esc(A.summary)}</p>`+A.items.map(it=>`<div class="adv ${it.level}"><div class="adv-t"><span class="adv-i" aria-hidden="true">${ic[it.level]}</span>${esc(it.title)}</div><div class="adv-d">${esc(it.detail)}</div>${it.acts.length?`<ul>${it.acts.map(a=>`<li>${esc(a)}</li>`).join("")}</ul>`:""}</div>`).join("");
+}
+
+/* ---------------- light / dark switch ---------------- */
+function applyTheme(t){
+  if(t==="light"||t==="dark") document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme");
+  document.querySelectorAll(".theme button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===t)));
+  try{ localStorage.setItem("sllb-theme",t); }catch(e){}
+}
+document.querySelectorAll(".theme button").forEach(b=>b.addEventListener("click",()=>applyTheme(b.dataset.t)));
+{ let t="auto"; try{ t=localStorage.getItem("sllb-theme")||"auto"; }catch(e){} applyTheme(t); }
+// the hosted copy (e.g. GitHub Pages) serves the Excel template next to the page
+if(/^https?:$/.test(location.protocol) && !(window.claude && typeof window.claude.use==="function") && !/claude\.ai|claudeusercontent/.test(location.hostname)) $("tpl").hidden=false;
+/* ---------------- events ---------------- */
+$("visio").onclick=generateVisio;
+$("pdfbtn").onclick=generatePdf;
+async function handleFile(f){
+  if(!f) return;
+  try{
+    if(typeof XLSX==="undefined") throw new Error("The Excel reader library didn't load. Check your connection and reload.");
+    const buf=await f.arrayBuffer(); const wb=XLSX.read(buf,{type:"array"});
+    const {data:d,warn}=parseWorkbook(wb);
+    loadData(d,`Showing: ${f.name} (${d.ops.length} operations)`,warn);
+  }catch(err){ $("msgs").innerHTML=`<div class="msg err">${esc(err.message||err)}</div>`; }
+}
+$("pick").onclick=()=>$("file").click();
+$("file").onchange=e=>{ handleFile(e.target.files[0]); e.target.value=""; };
+$("sample").onclick=()=>loadData(JSON.parse(JSON.stringify(SAMPLE)),"Showing: built-in sample (men's polo shirt)");
+const drop=$("drop");
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop",e=>handleFile(e.dataTransfer.files[0]));
+["ltype","orient","farside","lbl","opnames","secgap","flags"].forEach(id=>$(id).addEventListener("change",render));
+$("animchk").checked=animOn;
+$("animchk").addEventListener("change",e=>{ animOn=e.target.checked; const w=$("lwrap"), sv=w.querySelector("svg"); w.classList.toggle("anim",animOn); try{ animOn?sv.unpauseAnimations():sv.pauseAnimations(); }catch(_){} });
+["target","hours","eff"].forEach(id=>$(id).addEventListener("input",()=>{ if($(id).value!=="") render(); }));
+const setZoom=z=>{ zoom=Math.min(2,Math.max(0.4,z)); $("zv").textContent=Math.round(zoom*100)+"%"; if(lastR) drawLayout(lastR); };
+$("zin").onclick=()=>setZoom(zoom+0.1); $("zout").onclick=()=>setZoom(zoom-0.1);
+if(innerWidth<700) zoom=0.8, $("zv").textContent="80%";
+loadData(JSON.parse(JSON.stringify(SAMPLE)),"Showing: built-in sample (men's polo shirt)");
+</script>
+</body>
+</html>
