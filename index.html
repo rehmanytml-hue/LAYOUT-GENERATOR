@@ -17,7 +17,7 @@
   --accent:#1f3a5f; --accent-ink:#ffffff;
   --crit:#c62828; --warn:#b26a00; --good:#2e7d32;
   --table:#e6e1d3; --table-stroke:#bdb6a2;
-  --mach:#dedbd2; --fabric:#9db7d8; --skin:#c99a74; --hair:#2f2a26; --shirt:#3e4a5c;
+  --mach:#dedbd2; --fabric:#9db7d8; --skin:#c99a74; --hair:#2f2a26; --shirt:#3e4a5c; --helper:#5f7a3a;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#6250d6; --s8:#e34948; --neutral:#8a8983;
 }
 @media (prefers-color-scheme: dark){
@@ -28,7 +28,7 @@
     --accent:#8fb4e6; --accent-ink:#0b0b0b;
     --crit:#ef6b6b; --warn:#e0a03a; --good:#5cbf60;
     --table:#2e2b24; --table-stroke:#4d4839;
-    --mach:#55534c; --fabric:#5a77a0; --skin:#b98962; --hair:#0e0d0c; --shirt:#8391a8;
+    --mach:#55534c; --fabric:#5a77a0; --skin:#b98962; --hair:#0e0d0c; --shirt:#8391a8; --helper:#9bbf6a;
     --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767; --neutral:#8f8e86;
   }
 }
@@ -39,7 +39,7 @@
     --accent:#8fb4e6; --accent-ink:#0b0b0b;
     --crit:#ef6b6b; --warn:#e0a03a; --good:#5cbf60;
     --table:#2e2b24; --table-stroke:#4d4839;
-    --mach:#55534c; --fabric:#5a77a0; --skin:#b98962; --hair:#0e0d0c; --shirt:#8391a8;
+    --mach:#55534c; --fabric:#5a77a0; --skin:#b98962; --hair:#0e0d0c; --shirt:#8391a8; --helper:#9bbf6a;
     --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767; --neutral:#8f8e86;
 }
 *{box-sizing:border-box}
@@ -350,13 +350,19 @@ const MW=70, MH=60, SECGAP=30, LM=110, RM=110;   // MW×MH = machine table artwo
 /* Station frame for a station on the near (top) side of the conveyor; the conveyor is below the frame.
    art/op map artwork-local and operator-local points into the frame. Far-side stations are the same frame rotated 180°. */
 function frameSpec(){
-  const o=$("orient").value;
-  if(o==="back") return {o,SW:70,BH:85,PITCH:82,table:{x:0,y:0,w:70,h:60},
-    art:(x,y)=>[70-x,60-y], artSvg:"rotate(180 35 30)", op:(x,y)=>[46-x,68-y], opSvg:"translate(46 68) rotate(180)", label:{x:0,y:0,w:70,h:28}, badge:{x:-4,y:53}};
-  if(o==="side") return {o,SW:92,BH:100,PITCH:100,table:{x:30,y:30,w:60,h:70},
-    art:(x,y)=>[30+y,100-x], artSvg:"translate(30 100) rotate(-90)", op:(x,y)=>[22+y,76-x], opSvg:"translate(22 76) rotate(-90)", label:{x:0,y:0,w:92,h:28}, badge:{x:70,y:86}};
-  return {o:"facing",SW:70,BH:85,PITCH:82,table:{x:0,y:25,w:70,h:60},
-    art:(x,y)=>[x,25+y], artSvg:"translate(0 25)", op:(x,y)=>[24+x,17+y], opSvg:"translate(24 17)", label:{x:0,y:55,w:70,h:30}, badge:{x:50,y:17}};
+  const o=$("orient").value, H=(data.ops||[]).some(x=>(x.helpers||0)>0);   // helpers sit across the table, facing the operator
+  if(o==="back") return H
+    ? {o,SW:70,BH:118,PITCH:82,table:{x:0,y:31,w:70,h:60},
+       art:(x,y)=>[70-x,91-y], artSvg:"translate(0 31) rotate(180 35 30)", op:(x,y)=>[46-x,99-y], opSvg:"translate(46 99) rotate(180)",
+       hp:(x,y)=>[46+x,19+y], hpSvg:"translate(46 19)", label:{x:0,y:31,w:70,h:28}, badge:{x:-4,y:84}}
+    : {o,SW:70,BH:85,PITCH:82,table:{x:0,y:0,w:70,h:60},
+       art:(x,y)=>[70-x,60-y], artSvg:"rotate(180 35 30)", op:(x,y)=>[46-x,68-y], opSvg:"translate(46 68) rotate(180)", label:{x:0,y:0,w:70,h:28}, badge:{x:-4,y:53}};
+  if(o==="side") return {o,SW:H?122:92,BH:100,PITCH:H?130:100,table:{x:30,y:30,w:60,h:70},
+    art:(x,y)=>[30+y,100-x], artSvg:"translate(30 100) rotate(-90)", op:(x,y)=>[22+y,76-x], opSvg:"translate(22 76) rotate(-90)",
+    hp:(x,y)=>[102-y,76+x], hpSvg:"translate(102 76) rotate(90)", label:{x:0,y:0,w:H?122:92,h:28}, badge:{x:70,y:86}};
+  return {o:"facing",SW:70,BH:H?116:85,PITCH:82,table:{x:0,y:25,w:70,h:60},
+    art:(x,y)=>[x,25+y], artSvg:"translate(0 25)", op:(x,y)=>[24+x,17+y], opSvg:"translate(24 17)",
+    hp:(x,y)=>[24-x,97-y], hpSvg:"translate(24 97) rotate(180)", label:{x:0,y:55,w:70,h:30}, badge:{x:50,y:17}};
 }
 function geomY(two,BH){ const yLab=18, bandT=31, yTab=bandT+BH+8, TH=40, bandB=yTab+TH+8, yLabB=bandB+BH+18;
   return {yLab,bandT,yTab,TH,bandB,yLabB,H: two? yLabB+14 : yTab+TH+30}; }
@@ -364,8 +370,7 @@ function geomY(two,BH){ const yLab=18, bandT=31, yTab=bandT+BH+8, TH=40, bandB=y
 const mirrorRect=(r,fs,bottom)=> bottom? {x:fs.SW-r.x-r.w, y:fs.BH-r.y-r.h, w:r.w, h:r.h} : {...r};
 function buildLayout(R){
   const type=$("ltype").value, units=[], gapOn=$("secgap").checked, PITCH=frameSpec().PITCH;
-  R.ops.forEach(o=>{ for(let h=0;h<(o.helpers||0);h++) units.push({op:o,k:h,hasMc:false,hasOp:true,helper:true});
-    const n=Math.max(o.operators,o.machines,1); for(let k=0;k<n;k++) units.push({op:o,k,hasMc:k<o.machines,hasOp:k<o.operators}); });
+  R.ops.forEach(o=>{ const n=Math.max(o.operators,o.machines,1); for(let k=0;k<n;k++) units.push({op:o,k,hasMc:k<o.machines,hasOp:k<o.operators,hasHelper:k<(o.helpers||0)}); });
   let x=0, side=0, prev=null;
   if(type==="Two-sided"){
     units.forEach(u=>{
@@ -500,6 +505,7 @@ function drawLayout(R,opt={}){
     s += `<rect class="mbox" x="${tb.x}" y="${tb.y}" width="${tb.w}" height="${tb.h}" rx="4" fill="${manualish?"var(--surface-2)":col}" fill-opacity="${manualish?1:.2}" stroke="${manualish?"var(--ink-3)":col}" stroke-width="${manualish?1.2:2}" ${manualish?'stroke-dasharray="4 2"':""}/>`;
     s += `<g transform="${fs.artSvg}">${stationArt(kind,col,o.code,i)}</g>`;
     s += `<g transform="${fs.opSvg}">${operatorArt(over?"var(--crit)":"var(--shirt)",u.hasOp,i)}</g>`;
+    if(u.hasHelper && fs.hp) s += `<g transform="${fs.hpSvg}">${operatorArt("var(--helper)",true,i+37)}</g>`;
     s += `</g>`;
     // upright text on the label area (back of the table / beside the operator)
     const lb=mirrorRect(fs.label,fs,flip), showNames=$("opnames").checked;
@@ -528,6 +534,7 @@ function drawLayout(R,opt={}){
     const n=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0);
     return `<span><i class="sw" style="border-color:${c};background:color-mix(in srgb, ${c} 20%, transparent)"></i><b class="mono">${esc(cd)}</b> ${esc(m?.desc||"")} ${n?`(${n})`:""}</span>`; }).join("");
   lg += `<span><svg width="22" height="22" viewBox="-12 -18 24 32"><g>${operatorArt("var(--shirt)",true,0)}</g></svg>Operator</span>`;
+  if(R.totalHelpers) lg += `<span><svg width="22" height="22" viewBox="-12 -18 24 32"><g>${operatorArt("var(--helper)",true,0)}</g></svg>Helper (faces the operator)</span>`;
   lg += `<span><svg width="20" height="18" viewBox="-9 -8 18 16"><path d="${SHIRT_D}" fill="var(--fabric)" stroke="var(--ink-2)" stroke-width=".7"/></svg>Garment bundle</span>`;
   if(flags){
   lg += `<span><svg width="20" height="16"><rect x="2" y="2" width="16" height="12" rx="3" fill="none" stroke="var(--crit)" stroke-dasharray="3 2" stroke-width="1.5"/></svg>Over required cycle (red shirt)</span>`;
@@ -757,8 +764,19 @@ function buildVsdxParts(R){
       kids.push(O(-12,-9.5,24,13,{name:"Operator",fill:shirt,line:shirt,lw:0.25,ellipse:true}));
       kids.push(O(-5.2,-7.7,10.4,10.4,{name:"Head",fill:HAIR,line:HAIR,lw:0.25,ellipse:true}));
     } else kids.push(O(-10,-17,20,9,{name:"Empty chair",noFill:true,line:INK3,lw:0.75,dash:true,round:AX(3)}));
+    // helper: across the table, facing the operator
+    if(u.hasHelper && fs.hp){
+      const Hh=(lx,ly,w,h,p)=>rectVia(fs.hp,lx,ly,w,h,p), HC="#5F7A3A";
+      kids.push(Hh(-10,-17,20,9,{name:"Helper chair",fill:"#EFEEE9",line:INK3,lw:0.5,round:AX(3)}));
+      kids.push(Hh(-9,-1,4,12,{name:"Helper arm",fill:HC,line:HC,lw:0.25,round:AX(2)}));
+      kids.push(Hh(5,-1,4,12,{name:"Helper arm",fill:HC,line:HC,lw:0.25,round:AX(2)}));
+      kids.push(Hh(-8.4,9.1,4.8,4.8,{name:"Hand",fill:SKIN,line:SKIN,lw:0.25,ellipse:true}));
+      kids.push(Hh(3.6,9.1,4.8,4.8,{name:"Hand",fill:SKIN,line:SKIN,lw:0.25,ellipse:true}));
+      kids.push(Hh(-12,-9.5,24,13,{name:"Helper",fill:HC,line:HC,lw:0.25,ellipse:true}));
+      kids.push(Hh(-5.2,-7.7,10.4,10.4,{name:"Head",fill:HAIR,line:HAIR,lw:0.25,ellipse:true}));
+    }
     if(isBn){ const br=mirrorRect({x:fs.badge.x,y:fs.badge.y,w:24,h:14},fs,flip); kids.push(shape({name:"Bottleneck",x:AX(X+br.x),y:AY(Y+br.y+14),w:AX(24),h:AX(14),fill:CRIT,line:CRIT,round:AX(7),text:"BN",pt:6,bold:true,tcolor:"#FFFFFF"},og)); }
-    const props=[["OpNo","Op No",o.no],["Section","Section",o.section],["Operation","Operation",o.name],["Machine","Machine code",o.code],["Station","Station",u.helper?`Helper ${u.k+1} of ${o.helpers}`:`${u.k+1} of ${Math.max(o.operators,o.machines)}`],["Helpers","Helpers on this operation",o.helpers||0],["SMV","SMV (min)",o.smv.toFixed(2)],["Operators","Operators",o.operators],["Machines","Machines",o.machines],["Cycle","Cycle / operator (min)",isFinite(o.cycle)?o.cycle.toFixed(3):"-"],["Load","Load %",Math.round(o.load*100)]];
+    const props=[["OpNo","Op No",o.no],["Section","Section",o.section],["Operation","Operation",o.name],["Machine","Machine code",o.code],["Station","Station",u.helper?`Helper ${u.k+1} of ${o.helpers}`:`${u.k+1} of ${Math.max(o.operators,o.machines)}`],["Helpers","Helpers on this operation",o.helpers||0],["HelperHere","Helper at this station",u.hasHelper?"Yes":"No"],["SMV","SMV (min)",o.smv.toFixed(2)],["Operators","Operators",o.operators],["Machines","Machines",o.machines],["Cycle","Cycle / operator (min)",isFinite(o.cycle)?o.cycle.toFixed(3):"-"],["Load","Load %",Math.round(o.load*100)]];
     const gname=u.helper?`Helper ${xe(o.no)}-H${u.k+1}`:`Station ${xe(o.no)}-${u.k+1}`;
     let g=`<Shape ID="${id++}" NameU="${gname}" Name="${gname}" Type="Group" LineStyle="0" FillStyle="0" TextStyle="0">`;
     g+=C("PinX",gx+gw/2)+C("PinY",gy+gh/2)+C("Width",gw)+C("Height",gh)+C("LocPinX",gw/2)+C("LocPinY",gh/2)+C("Angle",0);
@@ -770,7 +788,7 @@ function buildVsdxParts(R){
   out.push(text(AX(20),AY(ly0+18),AX(300),AX(18),"Legend",{pt:10,bold:true,align:0}));
   const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const n=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0);
     return {fill:toHex(map[cd]),line:toHex(map[cd]),trans:0.78,t:`${cd} – ${m?.desc||""}${n?` (${n})`:""}`}; });
-  items.push({fill:"#52514E",line:"#FFFFFF",ell:true,t:"Operator"},{fill:"#F0EFEC",line:"#8A8983",dash:true,t:"Manual / helper table"});
+  items.push({fill:"#52514E",line:"#FFFFFF",ell:true,t:"Operator"},...(R.totalHelpers?[{fill:"#5F7A3A",line:"#FFFFFF",ell:true,t:"Helper (faces the operator)"}]:[]),{fill:"#F0EFEC",line:"#8A8983",dash:true,t:"Manual / helper table"});
   items.forEach((it,i)=>{ const cx=20+(i%perRow)*300, cy=ly0+30+Math.floor(i/perRow)*30;
     out.push(shape({name:"Legend key",x:AX(cx),y:AY(cy+16),w:AX(22),h:AX(16),fill:it.fill,trans:it.trans||0,noFill:it.noFill,line:it.line,lw:1.25,dash:it.dash,ellipse:it.ell,round:it.ell?0:AX(3)}));
     out.push(text(AX(cx+30),AY(cy+16),AX(260),AX(16),it.t,{pt:8,align:0,name:"Legend text"}));
@@ -839,7 +857,7 @@ async function generateVisio(){
 }
 
 /* ---------------- PDF report ---------------- */
-const LIGHT={"--bg":"#f4f3ef","--surface":"#fcfcfb","--surface-2":"#efeee9","--line":"#dcdad3","--grid":"#e8e6df","--ink":"#0b0b0b","--ink-2":"#52514e","--ink-3":"#8a8983","--accent":"#1f3a5f","--crit":"#c62828","--warn":"#b26a00","--good":"#2e7d32","--table":"#e6e1d3","--table-stroke":"#bdb6a2","--mach":"#dedbd2","--fabric":"#9db7d8","--skin":"#c99a74","--hair":"#2f2a26","--shirt":"#3e4a5c",...VHEX};
+const LIGHT={"--bg":"#f4f3ef","--surface":"#fcfcfb","--surface-2":"#efeee9","--line":"#dcdad3","--grid":"#e8e6df","--ink":"#0b0b0b","--ink-2":"#52514e","--ink-3":"#8a8983","--accent":"#1f3a5f","--crit":"#c62828","--warn":"#b26a00","--good":"#2e7d32","--table":"#e6e1d3","--table-stroke":"#bdb6a2","--mach":"#dedbd2","--fabric":"#9db7d8","--skin":"#c99a74","--hair":"#2f2a26","--shirt":"#3e4a5c","--helper":"#5f7a3a",...VHEX};
 // serialize an on-screen SVG for print: light colours, bundles frozen in place, no selection
 function svgForPrint(svg,scale){
   const clone=svg.cloneNode(true), vb=svg.viewBox.baseVal;
@@ -906,7 +924,7 @@ async function buildPdfBytes(){
   const sc=Math.min(AW/widest, mode==='strips'?1.2:1.5), stripH=L.h*sc;
   // legend set-up first: it sits centred under the layout, as wide as the layout
   const {map,order}=colorMap(); const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const cnt=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0); return [toHex(map[cd]),`${cd}  ${m?.desc||""}${cnt?` (${cnt})`:""}`]; });
-  items.push(["#3e4a5c","Operator"],["#efeee9","Manual / helper table"]);
+  items.push(["#3e4a5c","Operator"],...(R.totalHelpers?[["#5f7a3a","Helper (faces the operator)"]]:[]),["#efeee9","Manual / helper table"]);
   const legW=Math.min(AW,Math.max(widest*sc,640)), legX=M+(AW-legW)/2, per=Math.max(3,Math.floor(legW/270)), cw=legW/per, legRows=Math.ceil(items.length/per), legH=18+legRows*16;
   // page 1: every block centred on the page; whole-line modes also share the spare height evenly above and below
   const hc=(t,sz=12)=>M+(AW-FB.widthOfTextAtSize(safe(t),sz))/2;
