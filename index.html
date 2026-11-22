@@ -892,7 +892,6 @@ async function buildPdfBytes(){
   newPage(firstSize);
 
   const headTxt=mode==="strips"?"Line layout":`Line layout – whole line${mode==="one"?` (${firstSize} sheet)`:""}`;
-  if(mode==="strips") heading(headTxt);
   const maxUnits=AW/ptPerUnit, n= mode!=="strips" ? 1 : (L.w<=maxUnits*1.15?1:Math.ceil(L.w/maxUnits));
   // cut points snap to the aisle between station columns so no station is split
   const fsP=frameSpec(), xs=[...new Set(buildLayout(R).units.map(u=>u.x))].sort((a,b)=>a-b);
@@ -904,9 +903,20 @@ async function buildPdfBytes(){
   const {map,order}=colorMap(); const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const cnt=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0); return [toHex(map[cd]),`${cd}  ${m?.desc||""}${cnt?` (${cnt})`:""}`]; });
   items.push(["#3e4a5c","Operator"],["#efeee9","Manual / helper table"]);
   const legW=Math.min(AW,Math.max(widest*sc,640)), legX=M+(AW-legW)/2, per=Math.max(3,Math.floor(legW/270)), cw=legW/per, legRows=Math.ceil(items.length/per), legH=18+legRows*16;
-  // whole-line modes: centre the layout + legend block vertically in the space under the heading
-  if(mode!=="strips"){ const blockH=24+12+stripH+22+legH+(24+72)+(24+15*(new Set(R.ops.map(o=>o.code)).size+2)+16), avail=y-(M+18); if(avail>blockH) y-=(avail-blockH)/2;
-    text(headTxt,M+(AW-widest*sc)/2,y-12,{size:12,bold:true}); y-=24; }
+  // line summary at the top of page 1, aligned with the layout
+  need(100); heading("Line summary",legX);
+  const k=[["Total SMV",R.totalSMV.toFixed(2),"min per garment"],["Takt time",R.takt.toFixed(3),`required cycle ${R.req.toFixed(3)} min`],
+    ["Operators",String(R.totalOps),`theoretical ${R.theoMP.toFixed(1)}`],["Machines",String(R.totalMc),`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
+    ["Theoretical MP",R.theoMP.toFixed(1),"SMV x target / (available min x eff.)"],
+    ["Line balance",(R.balEff*100).toFixed(1)+"%","SMV / (operators x longest cycle)"],["Expected output",Math.floor(R.outHr)+"/h",`${Math.floor(R.outDay)} per day vs ${I.target}`]];
+  need(64);
+  const kw=(legW-6*8)/7;
+  k.forEach(([l,v,sub],i)=>{ const x=legX+i*(kw+8);
+    page.drawRectangle({x,y:y-56,width:kw,height:56,borderColor:LINE,borderWidth:0.75,color:hex("#fcfcfb")});
+    text(l,x+8,y-14,{size:8,color:INK2}); text(v,x+8,y-34,{size:17,bold:true,color:(l==="Expected output"&&R.outDay<I.target)?CRIT:INK});
+    text(fit(sub,kw-14,7),x+8,y-48,{size:7,color:INK3}); });
+  y-=72;
+  y-=4; heading(headTxt, mode==="strips"?M:M+(AW-widest*sc)/2);
   for(let i=0;i<n;i++){
     need(stripH+18);
     const chunk=cuts[i+1]-cuts[i], iw=chunk*sc, ix=M+(AW-iw)/2;
@@ -926,19 +936,6 @@ async function buildPdfBytes(){
     text(fit(t,cw-24,8),x+20,yy-7,{size:8,color:INK2}); });
   y-=legRows*16+10;
 
-  // page 1 continues: line summary + machine requirement, aligned with the layout
-  need(100); heading("Line summary",legX);
-  const k=[["Total SMV",R.totalSMV.toFixed(2),"min per garment"],["Takt time",R.takt.toFixed(3),`required cycle ${R.req.toFixed(3)} min`],
-    ["Operators",String(R.totalOps),`theoretical ${R.theoMP.toFixed(1)}`],["Machines",String(R.totalMc),`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
-    ["Theoretical MP",R.theoMP.toFixed(1),"SMV x target / (available min x eff.)"],
-    ["Line balance",(R.balEff*100).toFixed(1)+"%","SMV / (operators x longest cycle)"],["Expected output",Math.floor(R.outHr)+"/h",`${Math.floor(R.outDay)} per day vs ${I.target}`]];
-  need(64);
-  const kw=(legW-6*8)/7;
-  k.forEach(([l,v,sub],i)=>{ const x=legX+i*(kw+8);
-    page.drawRectangle({x,y:y-56,width:kw,height:56,borderColor:LINE,borderWidth:0.75,color:hex("#fcfcfb")});
-    text(l,x+8,y-14,{size:8,color:INK2}); text(v,x+8,y-34,{size:17,bold:true,color:(l==="Expected output"&&R.outDay<I.target)?CRIT:INK});
-    text(fit(sub,kw-14,7),x+8,y-48,{size:7,color:INK3}); });
-  y-=72;
   need(80); heading("Machine requirement",legX);
   const by={}; R.ops.forEach(o=>{ (by[o.code] ||= {mc:0,op:0,smv:0}); by[o.code].mc+=o.machines; by[o.code].op+=o.operators; by[o.code].smv+=o.smv; });
   const mcols=[["Code",70,"l"],["Description",300,"l"],["Machines",90,"r"],["Operators",90,"r"]];
