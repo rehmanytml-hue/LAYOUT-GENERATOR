@@ -184,9 +184,9 @@ th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-
 td{border-bottom-color:var(--line)}
 .adv{border-radius:0 6px 6px 0}
 .chk{font-size:13px}
-:root{--chair:#eef0f3;--garment:#9db7d8;--epoxy:#eceef1;--frame:#e6e9ed;--frame-edge:#b7bec8}
-@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])){--chair:#2a323d;--epoxy:#1d242d;--frame:#232b35;--frame-edge:#46505d}}
-:root[data-theme="dark"]{--chair:#2a323d;--epoxy:#1d242d;--frame:#232b35;--frame-edge:#46505d}
+:root{--check-tab:#e7f3ee;--check-edge:#3f8f6f;--cut-tab:#f1f4ea;--cut-edge:#7c9a5c;--chair:#eef0f3;--garment:#9db7d8;--epoxy:#eceef1;--frame:#e6e9ed;--frame-edge:#b7bec8}
+@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])){--check-tab:#16302a;--check-edge:#5fb592;--cut-tab:#232c1d;--cut-edge:#94b277;--chair:#2a323d;--epoxy:#1d242d;--frame:#232b35;--frame-edge:#46505d}}
+:root[data-theme="dark"]{--check-tab:#16302a;--check-edge:#5fb592;--cut-tab:#232c1d;--cut-edge:#94b277;--chair:#2a323d;--epoxy:#1d242d;--frame:#232b35;--frame-edge:#46505d}
 </style>
 </head>
 <body>
@@ -454,13 +454,21 @@ function buildLayout(R){
   }
   return {units,type};
 }
+// manual work type from the operation name: checking vs marking / cutting vs other manual work
+function manualType(o){
+  const n=String(o.name||"");
+  if(/check|inspect|\bqc\b|q\.c|audit|quality|examin|verify/i.test(n)) return "check";
+  if(/mark|cut|trim|notch|chalk|clip/i.test(n)) return "cutmark";
+  return "manual";
+}
+const TABLE_STYLE={check:{fill:"var(--check-tab)",stroke:"var(--check-edge)"},cutmark:{fill:"var(--cut-tab)",stroke:"var(--cut-edge)"},manual:{fill:"var(--surface-2)",stroke:"var(--ink-3)"},helper:{fill:"var(--surface-2)",stroke:"var(--ink-3)"}};
 function mkind(o,u){
   if(u.helper) return "helper";
-  if(!u.hasMc) return isManual(o.code)?"manual":"helper";
+  if(!u.hasMc) return isManual(o.code)?manualType(o):"helper";
   const m=data.machines.find(x=>x.code===o.code), d=(m?.desc||"")+" "+(m?.cat||"");
   if(/IRON|PRESS/.test(o.code)||/iron|press/i.test(d)) return "iron";
   if(/FUS/.test(o.code)||/fusing/i.test(d)) return "fuse";
-  if(isManual(o.code)) return "manual";
+  if(isManual(o.code)) return manualType(o);
   return "sew";
 }
 const coneCount=c=>/OL|4T|OVERLOCK|SERGER/.test(c)?4:/FL|CS|COVER|FLAT|3T/.test(c)?3:/DN|2N/.test(c)?2:1;
@@ -501,6 +509,24 @@ function stationArt(kind,col,code,i){
     s+=`<g class="fabric" ${d2}><path d="M22 12H34Q39 12 39 16.5Q39 21 34 21H22Z" fill="var(--mach)" stroke="var(--ink-2)" stroke-width=".8"/><rect x="25" y="15" width="7" height="3" rx="1.5" fill="var(--ink-2)"/></g>`;
     s+=`<path class="steam" ${d1} d="M44 7q2-2.5 0-5M48 7q2-2.5 0-5" stroke="var(--ink-3)" stroke-width=".8" fill="none"/>`;
     return s;
+  }
+  if(kind==="check"){   // checking / inspection table: lit panel, garment, magnifier, clipboard, tick
+    return `<rect x="7" y="5" width="36" height="23" rx="2" fill="#fff6cc" stroke="#d9c06a" stroke-width=".8"/>`
+     +`<path d="M15 9L20 7Q25 9 30 7L35 9L34 13L31 12L31 25L19 25L19 12L16 13Z" fill="var(--fabric)" stroke="var(--ink-2)" stroke-width=".5"/>`
+     +`<g stroke="var(--ink-2)" stroke-width="1.2" fill="none"><circle cx="27" cy="18" r="4"/><path d="M30 21l4 4"/></g>`
+     +`<rect x="48" y="8" width="13" height="17" rx="1.2" fill="#ffffff" stroke="var(--ink-3)" stroke-width=".7"/><rect x="51.5" y="6.5" width="6" height="3" rx="1" fill="var(--ink-3)"/>`
+     +`<path d="M50.5 14h8M50.5 17.5h8M50.5 21h6" stroke="var(--ink-3)" stroke-width=".6"/>`
+     +`<circle cx="62" cy="7" r="4.2" fill="#2e9d6a"/><path d="M59.8 7l1.6 1.6l3-3" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>`;
+  }
+  if(kind==="cutmark"){ // marking / cutting table: cutting mat with grid, pattern piece + chalk line, ruler, scissors
+    let g=`<rect x="4" y="5" width="44" height="24" rx="1.5" fill="#dbe8d2" stroke="#8fab7c" stroke-width=".7"/>`;
+    for(let k=1;k<7;k++) g+=`<line x1="${4+k*6.3}" y1="5" x2="${4+k*6.3}" y2="29" stroke="#ffffff" stroke-opacity=".7" stroke-width=".4"/>`;
+    for(let k=1;k<4;k++) g+=`<line x1="4" y1="${5+k*6}" x2="48" y2="${5+k*6}" stroke="#ffffff" stroke-opacity=".7" stroke-width=".4"/>`;
+    g+=`<path d="M10 9L33 8L38 21L12 25Z" fill="var(--fabric)" stroke="var(--ink-2)" stroke-width=".5"/><path d="M12 16L36 14" stroke="#ffffff" stroke-width=".9" stroke-dasharray="2 1.5"/>`;
+    g+=`<rect x="41" y="7" width="4" height="20" rx=".6" fill="#f2c94c" stroke="#a07a00" stroke-width=".4"/>`;
+    for(let k=0;k<6;k++) g+=`<line x1="41" y1="${9+k*3}" x2="${k%2?43:42.5}" y2="${9+k*3}" stroke="#a07a00" stroke-width=".4"/>`;
+    g+=`<g stroke="var(--ink-2)" stroke-width="1.1" fill="none"><circle cx="54" cy="11" r="2.4"/><circle cx="54" cy="19" r="2.4"/><path d="M56 12.5L66 18M56 17.5L66 12"/></g>`;
+    return g;
   }
   // manual / helper table
   let s=`<rect x="9" y="7" width="22" height="15" rx="1.5" fill="var(--fabric)" opacity=".5" transform="rotate(-7 20 14)"/><rect x="11" y="9" width="22" height="15" rx="1.5" fill="var(--fabric)"/>`;
@@ -686,12 +712,12 @@ function drawLayout(R,opt={}){
     const tag = u.helper ? `${o.no}·H${(o.helpers>1?u.k+1:"")}` : `${o.no}${Math.max(o.operators,o.machines)>1?"·"+(u.k+1):""}`;
     let line2 = u.helper ? "Helper" : lblMode==="cycle" ? fmt(o.cycle,3) : (kind==="helper"?"Helper":o.code);
     if(line2.length>8) line2 = line2.slice(0,7)+"…";
-    const manualish = kind==="manual"||kind==="helper", tb=fs.table;
+    const manualish = ["manual","helper","check","cutmark"].includes(kind), tb=fs.table, ts=TABLE_STYLE[kind];
     s += `<g class="station${sel}" tabindex="0" data-op="${esc(o.no)}" role="button" aria-label="Op ${esc(o.no)} ${esc(o.name)}, ${esc(o.code)}">`;
     s += `<g transform="translate(${X} ${Y})${flip?` rotate(180 ${fs.SW/2} ${fs.BH/2})`:""}">`;
     s += `<rect x="-3" y="-3" width="${fs.SW+6}" height="${fs.BH+6}" fill="transparent"/>`;
     if(over) s += `<rect x="${tb.x-3}" y="${tb.y-3}" width="${tb.w+6}" height="${tb.h+6}" rx="6" fill="none" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
-    s += `<rect class="mbox" x="${tb.x}" y="${tb.y}" width="${tb.w}" height="${tb.h}" rx="4" fill="${manualish?"var(--surface-2)":col}" fill-opacity="${manualish?1:.2}" stroke="${manualish?"var(--ink-3)":col}" stroke-width="${manualish?1.2:2}" ${manualish?'stroke-dasharray="4 2"':""}/>`;
+    s += `<rect class="mbox" x="${tb.x}" y="${tb.y}" width="${tb.w}" height="${tb.h}" rx="4" fill="${manualish?ts.fill:col}" fill-opacity="${manualish?1:.2}" stroke="${manualish?ts.stroke:col}" stroke-width="${manualish?1.2:2}" ${manualish?'stroke-dasharray="4 2"':""}/>`;
     s += `<g transform="${fs.artSvg}">${stationArt(kind,col,o.code,i)}</g>`;
     s += `<g transform="${fs.opSvg}">${operatorArt(over?"var(--crit)":"var(--shirt)",u.hasOp,i)}</g>`;
     if(u.hasHelper && fs.hp) s += `<g transform="${fs.hpSvg}">${operatorArt("var(--helper)",true,i+37)}</g>`;
@@ -733,6 +759,9 @@ function drawLayout(R,opt={}){
   if(flags){
   lg += `<span><svg width="20" height="16"><rect x="2" y="2" width="16" height="12" rx="3" fill="none" stroke="var(--crit)" stroke-dasharray="3 2" stroke-width="1.5"/></svg>Over required cycle (red shirt)</span>`;
   lg += `<span><svg width="26" height="16"><rect x="1" y="1" width="24" height="14" rx="7" fill="var(--crit)"/><text x="13" y="11" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">BN</text></svg>Bottleneck</span>`; }
+  const kinds=new Set(R.ops.map(o=>isManual(o.code)?manualType(o):null));
+  if(kinds.has("check")) lg += `<span><svg width="20" height="16"><rect x="2" y="2" width="16" height="12" rx="3" fill="var(--check-tab)" stroke="var(--check-edge)" stroke-dasharray="3 2"/></svg>Checking table</span>`;
+  if(kinds.has("cutmark")) lg += `<span><svg width="20" height="16"><rect x="2" y="2" width="16" height="12" rx="3" fill="var(--cut-tab)" stroke="var(--cut-edge)" stroke-dasharray="3 2"/></svg>Marking / cutting table</span>`;
   lg += `<span><svg width="20" height="16"><rect x="2" y="2" width="16" height="12" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-dasharray="3 2"/></svg>Manual / helper table</span>`;
   $("legend").innerHTML = lg;
 }
@@ -943,8 +972,9 @@ function buildVsdxParts(R){
       const l=Math.min(a[0],b[0]), t=Math.min(a[1],b[1]), W=Math.abs(a[0]-b[0]), H=Math.abs(a[1]-b[1]);
       return shape({...p,x:AX(l),y:AY(t+H),w:AX(W),h:AX(H)},og); };
     const L=(lx,ly,w,h,p)=>rectVia(fs.art,lx,ly,w,h,p), O=(lx,ly,w,h,p)=>rectVia(fs.op,lx,ly,w,h,p), Fr=(lx,ly,w,h,p)=>rectVia((x,y)=>[x,y],lx,ly,w,h,p);
-    const manualish = kind==="manual"||kind==="helper", tb=fs.table;
-    kids.push(Fr(tb.x,tb.y,tb.w,tb.h,{name:manualish?"Work table":"Machine table "+o.code,fill:manualish?"#F0EFEC":col,trans:manualish?0:0.8,line:manualish?INK3:col,lw:manualish?1:1.5,dash:manualish,round:AX(4)}));
+    const manualish = ["manual","helper","check","cutmark"].includes(kind), tb=fs.table;
+    const VT={check:["Checking table","#E7F3EE","#3F8F6F"],cutmark:["Marking / cutting table","#F1F4EA","#7C9A5C"],manual:["Work table","#F0EFEC",INK3],helper:["Work table","#F0EFEC",INK3]}[kind];
+    kids.push(Fr(tb.x,tb.y,tb.w,tb.h,{name:manualish?VT[0]:"Machine table "+o.code,fill:manualish?VT[1]:col,trans:manualish?0:0.8,line:manualish?VT[2]:col,lw:manualish?1:1.5,dash:manualish,round:AX(4)}));
     if(kind==="sew"){
       kids.push(L(13,7,46,16,{name:"Machine bed",fill:SURF,line:INK3,lw:0.5,round:AX(3)}));
       kids.push(L(5,12,17,11,{name:"Fabric",fill:FAB,line:FAB,lw:0.25}));
@@ -960,6 +990,17 @@ function buildVsdxParts(R){
       kids.push(L(5,9,58,15,{name:"Ironing board",fill:SURF,line:INK2,lw:0.5,round:AX(7)}));
       kids.push(L(9,12,16,9,{name:"Garment",fill:FAB,line:FAB,lw:0.25}));
       kids.push(L(22,12,17,9,{name:"Iron",fill:MACH,line:INK2,lw:0.5,round:AX(4)}));
+    } else if(kind==="check"){
+      kids.push(L(7,5,36,23,{name:"Inspection light panel",fill:"#FFF6CC",line:"#D9C06A",lw:0.5,round:AX(2)}));
+      kids.push(L(16,8,18,17,{name:"Garment",fill:FAB,line:INK2,lw:0.3,round:AX(1)}));
+      kids.push(L(23,14,8,8,{name:"Magnifier",noFill:true,line:INK2,lw:1,ellipse:true}));
+      kids.push(L(48,8,13,17,{name:"Clipboard",fill:SURF,line:INK3,lw:0.5,round:AX(1)}));
+      kids.push(L(57.8,2.8,8.4,8.4,{name:"Checked",fill:"#2E9D6A",line:"#2E9D6A",lw:0.25,ellipse:true}));
+    } else if(kind==="cutmark"){
+      kids.push(L(4,5,44,24,{name:"Cutting mat",fill:"#DBE8D2",line:"#8FAB7C",lw:0.5,round:AX(1.5)}));
+      kids.push(L(11,9,25,14,{name:"Pattern piece",fill:FAB,line:INK2,lw:0.3}));
+      kids.push(L(41,7,4,20,{name:"Ruler",fill:"#F2C94C",line:"#A07A00",lw:0.3}));
+      kids.push(L(51.6,8.6,4.8,4.8,{name:"Scissors",noFill:true,line:INK2,lw:0.8,ellipse:true})); kids.push(L(51.6,16.6,4.8,4.8,{name:"Scissors",noFill:true,line:INK2,lw:0.8,ellipse:true}));
     } else {
       kids.push(L(11,9,22,15,{name:"Cut panels",fill:FAB,line:FAB,lw:0.25}));
       if(kind==="helper") kids.push(L(40,9,19,13,{name:"Bundle",fill:"#E6E1D3",line:INK3,lw:0.5,round:AX(2)}));
@@ -1034,7 +1075,7 @@ function buildVsdxParts(R){
   out.push(text(AX(20),AY(ly0+18),AX(300),AX(18),"Legend",{pt:10,bold:true,align:0}));
   const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const n=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0);
     return {fill:toHex(map[cd]),line:toHex(map[cd]),trans:0.78,t:`${cd} – ${m?.desc||""}${n?` (${n})`:""}`}; });
-  items.push({fill:"#52514E",line:"#FFFFFF",ell:true,t:"Operator"},...(R.totalHelpers?[{fill:"#5F7A3A",line:"#FFFFFF",ell:true,t:"Helper (faces the operator)"}]:[]),{fill:"#F0EFEC",line:"#8A8983",dash:true,t:"Manual / helper table"});
+  items.push({fill:"#52514E",line:"#FFFFFF",ell:true,t:"Operator"},...(R.ops.some(o=>isManual(o.code)&&manualType(o)==="check")?[{fill:"#E7F3EE",line:"#3F8F6F",dash:true,t:"Checking table"}]:[]),...(R.ops.some(o=>isManual(o.code)&&manualType(o)==="cutmark")?[{fill:"#F1F4EA",line:"#7C9A5C",dash:true,t:"Marking / cutting table"}]:[]),...(R.totalHelpers?[{fill:"#5F7A3A",line:"#FFFFFF",ell:true,t:"Helper (faces the operator)"}]:[]),{fill:"#F0EFEC",line:"#8A8983",dash:true,t:"Manual / helper table"});
   items.forEach((it,i)=>{ const cx=20+(i%perRow)*300, cy=ly0+30+Math.floor(i/perRow)*30;
     out.push(shape({name:"Legend key",x:AX(cx),y:AY(cy+16),w:AX(22),h:AX(16),fill:it.fill,trans:it.trans||0,noFill:it.noFill,line:it.line,lw:1.25,dash:it.dash,ellipse:it.ell,round:it.ell?0:AX(3)}));
     out.push(text(AX(cx+30),AY(cy+16),AX(260),AX(16),it.t,{pt:8,align:0,name:"Legend text"}));
@@ -1124,7 +1165,7 @@ function svgForPrint(svg,scale){
       const pt=live.getPointAtLength(((beg%dur)/dur)*len); cm[i].parentNode.setAttribute("transform",`translate(${pt.x} ${pt.y})`); cm[i].remove(); }); }
   clone.querySelectorAll(".sel").forEach(e=>e.classList.remove("sel"));
   clone.querySelectorAll("[stroke-width='3']").forEach(e=>e.setAttribute("stroke-width","2"));
-  const OV={"--garment":HV.garment||"#9db7d8","--chair":HV.chair||"#eef0f3","--frame":"#e6e9ed","--frame-edge":"#b7bec8","--epoxy":"#eceef1"};
+  const OV={"--check-tab":"#e7f3ee","--check-edge":"#3f8f6f","--cut-tab":"#f1f4ea","--cut-edge":"#7c9a5c","--garment":HV.garment||"#9db7d8","--chair":HV.chair||"#eef0f3","--frame":"#e6e9ed","--frame-edge":"#b7bec8","--epoxy":"#eceef1"};
   return new XMLSerializer().serializeToString(clone).replace(/var\((--[\w-]+)\)/g,(m,n)=>OV[n]||LIGHT[n]||"#888888");
 }
 async function svgToCanvas(svg,scale){
@@ -1183,7 +1224,7 @@ async function buildPdfBytes(){
   const sc=Math.min(AW/widest, mode==='strips'?1.2:1.5), stripH=L.h*sc;
   // legend set-up first: it sits centred under the layout, as wide as the layout
   const {map,order}=colorMap(); const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const cnt=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0); return [toHex(map[cd]),`${cd}  ${m?.desc||""}${cnt?` (${cnt})`:""}`]; });
-  items.push(...($("linesys").value==="hanger"?[["#1e3a5f","Line / station number"]]:[]),["#3e4a5c","Operator"],...(R.totalHelpers?[["#5f7a3a","Helper (faces the operator)"]]:[]),["#efeee9","Manual / helper table"]);
+  items.push(...($("linesys").value==="hanger"?[["#1e3a5f","Line / station number"]]:[]),["#3e4a5c","Operator"],...(R.ops.some(o=>isManual(o.code)&&manualType(o)==="check")?[["#e7f3ee","Checking table"]]:[]),...(R.ops.some(o=>isManual(o.code)&&manualType(o)==="cutmark")?[["#f1f4ea","Marking / cutting table"]]:[]),...(R.totalHelpers?[["#5f7a3a","Helper (faces the operator)"]]:[]),["#efeee9","Manual / helper table"]);
   const legW=Math.min(AW,Math.max(widest*sc,640)), legX=M+(AW-legW)/2, per=Math.max(3,Math.floor(legW/270)), cw=legW/per, legRows=Math.ceil(items.length/per), legH=18+legRows*16;
   // page 1: every block centred on the page; whole-line modes also share the spare height evenly above and below
   const hc=(t,sz=12)=>M+(AW-FB.widthOfTextAtSize(safe(t),sz))/2;
