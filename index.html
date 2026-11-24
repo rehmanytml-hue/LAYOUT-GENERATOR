@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stitching Line Layout Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
@@ -43,7 +43,7 @@
     --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767; --neutral:#8f8e86;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.45}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.45}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
 header{padding:20px 20px 8px;max-width:1400px;margin:0 auto;position:relative}
 .theme{float:right;display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2);margin-left:12px}
@@ -129,14 +129,72 @@ td.n,th.n{text-align:right;font-family:"IBM Plex Mono",monospace}
 .vstat{font-size:12px;color:var(--ink-2)}
 .pdfsel{font:inherit;font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:7px 8px}
 .btn:disabled{opacity:.6;cursor:progress}
+/* ---- refreshed look ---- */
+:root{--amber:#f59e0b;--rail:#857d6b;--chip:#1f3a5f;--chip-ink:#ffffff}
+@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])){--rail:#4f4a3e;--chip:#8fb4e6;--chip-ink:#0b0b0b}}
+:root[data-theme="dark"]{--rail:#4f4a3e;--chip:#8fb4e6;--chip-ink:#0b0b0b}
+.topbar{background:#0f172a;color:#fff;border-bottom:3px solid var(--amber);
+  background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:24px 24px}
+.topbar header{padding:18px 20px 16px}
+.topbar h1{color:#fff;font-size:24px;display:flex;align-items:center;gap:10px}
+.topbar h1 .logo{width:30px;height:30px;border-radius:7px;background:var(--amber);display:inline-grid;place-items:center}
+.topbar p{color:#cbd5e1}
+.topbar .theme{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
+.topbar .theme button{color:#cbd5e1}
+.topbar .theme button[aria-pressed="true"]{background:var(--amber);color:#0f172a}
+main{padding-top:18px;gap:18px}
+.card{border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.05),0 6px 18px rgba(15,23,42,.05)}
+.card h2{border-left:3px solid var(--amber);padding-left:9px}
+.lhead h2{border-left:3px solid var(--amber);padding-left:9px}
+.kpi{border-radius:12px;border-top:3px solid var(--chip);box-shadow:0 1px 2px rgba(15,23,42,.05),0 6px 18px rgba(15,23,42,.05)}
+.kpi .v{font-size:28px}
+.kpi.bad{border-top-color:var(--crit)}
+/* ---- professional pass ---- */
+:root{--bg:#f4f5f7;--surface:#ffffff;--surface-2:#f6f7f9;--line:#e2e5ea;--grid:#eef0f3;--ink:#111827;--ink-2:#4b5563;--ink-3:#8b95a3;--accent:#1e3a5f;--chip:#1e3a5f}
+@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])){--bg:#0d1117;--surface:#151b23;--surface-2:#1b222c;--line:#2a323d;--grid:#1a2029;--ink:#e6edf3;--ink-2:#a3aebb;--ink-3:#6f7b89;--accent:#7aa2d6;--chip:#7aa2d6}}
+:root[data-theme="dark"]{--bg:#0d1117;--surface:#151b23;--surface-2:#1b222c;--line:#2a323d;--grid:#1a2029;--ink:#e6edf3;--ink-2:#a3aebb;--ink-3:#6f7b89;--accent:#7aa2d6;--chip:#7aa2d6}
+body{font-size:14px;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.topbar{background:#0f1f33;background-image:none;border-bottom:1px solid #22344d}
+.topbar header{padding:14px 20px}
+.topbar h1{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.topbar h1 .logo{width:26px;height:26px;border-radius:6px;background:#ffffff1a;border:1px solid #ffffff33}
+.topbar h1 .logo rect{fill:#ffffff}
+.topbar p{font-size:13px;color:#a9b6c6;margin-top:2px}
+.topbar .theme{border-radius:6px}
+.topbar .theme button{font-size:12px;padding:5px 12px}
+.topbar .theme button[aria-pressed="true"]{background:#ffffff;color:#0f1f33}
+.card{border-radius:8px;box-shadow:none;padding:18px 20px}
+.card h2,.lhead h2{border-left:0;padding-left:0;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.card h2 small{text-transform:none;letter-spacing:0;font-weight:400}
+#ltitle{text-transform:none;letter-spacing:0;font-size:15px;color:var(--ink)}
+.field{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3)}
+.field input,.field select,.pdfsel{height:36px;padding:0 10px;background:var(--surface);border-radius:6px;font-size:14px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink)}
+.btn{height:36px;padding:0 14px;border-radius:6px;background:var(--surface);font-size:14px}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary:hover{filter:brightness(1.1)}
+.drop{border-style:dashed;border-color:var(--line);background:var(--surface-2)}
+.kpis{gap:12px}
+.kpi{border-radius:8px;border-top:1px solid var(--line);box-shadow:none;padding:14px 16px}
+.kpi .l{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)}
+.kpi .v{font-family:Inter,sans-serif;font-weight:600;font-size:26px;letter-spacing:-.02em;margin-top:4px}
+.kpi.bad{border-top:1px solid var(--line)}
+.kpi.bad .v{color:var(--crit)}
+.layout-wrap{border-radius:6px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3)}
+td{border-bottom-color:var(--line)}
+.adv{border-radius:0 6px 6px 0}
+.chk{font-size:13px}
+:root{--chair:#eef0f3;--garment:#9db7d8;--epoxy:#eceef1;--frame:#e6e9ed;--frame-edge:#b7bec8}
+@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])){--chair:#2a323d;--epoxy:#1d242d;--frame:#232b35;--frame-edge:#46505d}}
+:root[data-theme="dark"]{--chair:#2a323d;--epoxy:#1d242d;--frame:#232b35;--frame-edge:#46505d}
 </style>
 </head>
 <body>
-<header>
-  <div class="theme" role="group" aria-label="Colour theme"><button data-t="auto">Auto</button><button data-t="light">☀ Light</button><button data-t="dark">☾ Dark</button></div>
-  <h1>Stitching Line Layout Builder</h1>
+<div class="topbar"><header>
+  <div class="theme" role="group" aria-label="Colour theme"><button data-t="auto">Auto</button><button data-t="light">Light</button><button data-t="dark">Dark</button></div>
+  <h1><span class="logo" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20"><rect x="2" y="8" width="16" height="4" rx="1" fill="#0f172a"/><rect x="3" y="3" width="5" height="4" rx="1" fill="#0f172a"/><rect x="12" y="3" width="5" height="4" rx="1" fill="#0f172a"/><rect x="3" y="13" width="5" height="4" rx="1" fill="#0f172a"/><rect x="12" y="13" width="5" height="4" rx="1" fill="#0f172a"/></svg></span>Stitching Line Layout Builder</h1>
   <p>Load an Excel file with your operations, manpower and machines to draw the line layout and check the balance.</p>
-</header>
+</header></div>
 <main>
   <section class="card">
     <div class="toolbar">
@@ -149,6 +207,10 @@ td.n,th.n{text-align:right;font-family:"IBM Plex Mono",monospace}
       </div>
     </div>
     <div class="toolbar" style="margin-top:12px">
+      <label class="field">Line system
+        <select id="linesys"><option value="conv">Conventional (bundle)</option><option value="hanger">Hanger line (UPS)</option></select></label>
+      <label class="field" id="hstyleWrap" hidden>Hanger detail
+        <select id="hstyle"><option value="B">Detailed</option><option value="A">Realistic (power / air points)</option><option value="C">Clean plan</option></select></label>
       <label class="field">Layout type
         <select id="ltype"><option>Two-sided</option><option>U-shape</option><option>Single row</option></select></label>
       <label class="field">Operator orientation
@@ -230,7 +292,7 @@ const SAMPLE = {
 };
 
 let data = JSON.parse(JSON.stringify(SAMPLE));
-let zoom = 1, selected = null, animOn = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+let zoom = 1, selected = null, animOn = false;
 const $ = id => document.getElementById(id);
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmt = (v,d=2)=> (v==null||!isFinite(v))?"–":Number(v).toFixed(d);
@@ -290,6 +352,7 @@ function parseWorkbook(wb){
       else if(/effic/.test(k)) { let e=num(v); if(e!=null && e>1.5) e/=100; I.eff??=e; }
       else if(/layout/.test(k)) I.layout??=String(v);
       else if(/orient/.test(k)) I.orient??=String(v);
+      else if(/system/.test(k)) I.sys??=String(v);
       else if(/line name|^line$/.test(k)) I.lineName??=String(v);
       else if(/style|order/.test(k)) I.style??=String(v);
       else if(/buyer|customer/.test(k)) I.buyer??=String(v);
@@ -346,10 +409,13 @@ function colorMap(){
 }
 
 /* ---------------- layout drawing ---------------- */
-const MW=70, MH=60, SECGAP=30, LM=110, RM=110;   // MW×MH = machine table artwork size
+const MW=70, MH=60, SECGAP=30; let LM=110, RM=110;
+// hanger lines get wider margins for the loading / unloading stations
+function setMargins(){ const h=$("linesys").value==="hanger"; LM=h?210:110; RM=h?120:110; }   // MW×MH = machine table artwork size
 /* Station frame for a station on the near (top) side of the conveyor; the conveyor is below the frame.
    art/op map artwork-local and operator-local points into the frame. Far-side stations are the same frame rotated 180°. */
-function frameSpec(){
+function frameSpec(){ const f=frameSpecBase(); if($("linesys").value==="hanger") f.PITCH+=16; return f; }
+function frameSpecBase(){
   const o=$("orient").value, H=(data.ops||[]).some(x=>(x.helpers||0)>0);   // helpers sit across the table, facing the operator
   if(o==="back") return H
     ? {o,SW:70,BH:118,PITCH:82,table:{x:0,y:31,w:70,h:60},
@@ -364,8 +430,8 @@ function frameSpec(){
     art:(x,y)=>[x,25+y], artSvg:"translate(0 25)", op:(x,y)=>[24+x,17+y], opSvg:"translate(24 17)",
     hp:(x,y)=>[24-x,97-y], hpSvg:"translate(24 97) rotate(180)", label:{x:0,y:55,w:70,h:30}, badge:{x:50,y:17}};
 }
-function geomY(two,BH){ const yLab=18, bandT=31, yTab=bandT+BH+8, TH=40, bandB=yTab+TH+8, yLabB=bandB+BH+18;
-  return {yLab,bandT,yTab,TH,bandB,yLabB,H: two? yLabB+14 : yTab+TH+30}; }
+function geomY(two,BH){ const yLab=24, bandT=37, yTab=bandT+BH+8, TH=$("linesys").value==="hanger"?72:40, bandB=yTab+TH+8, yLabB=bandB+BH+18;
+  return {yLab,bandT,yTab,TH,bandB,yLabB,H: two? yLabB+20 : yTab+TH+30}; }
 // mirror a frame rect for the far side of the conveyor
 const mirrorRect=(r,fs,bottom)=> bottom? {x:fs.SW-r.x-r.w, y:fs.BH-r.y-r.h, w:r.w, h:r.h} : {...r};
 function buildLayout(R){
@@ -445,41 +511,162 @@ function stationArt(kind,col,code,i){
 /* operator seen from above, facing +y (towards the machine) */
 function operatorArt(shirt,present,i){
   if(!present) return `<rect x="-10" y="-17" width="20" height="9" rx="3" fill="none" stroke="var(--ink-3)" stroke-dasharray="2 2"/>`;
-  return `<rect x="-10" y="-17" width="20" height="9" rx="3" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width=".8"/>`
+  return `<rect x="-10" y="-17" width="20" height="9" rx="3" fill="var(--chair)" stroke="var(--ink-3)" stroke-width=".8"/>`
    +`<g class="hands" style="animation-delay:-${(rnd(i+3)*0.5).toFixed(2)}s"><path d="M-9-1L-6 11M9-1L6 11" stroke="${shirt}" stroke-width="4" stroke-linecap="round"/><circle cx="-6" cy="11.5" r="2.4" fill="var(--skin)"/><circle cx="6" cy="11.5" r="2.4" fill="var(--skin)"/></g>`
    +`<ellipse cx="0" cy="-3" rx="12" ry="6.5" fill="${shirt}"/><circle cx="0" cy="-2.5" r="5.2" fill="var(--hair)"/>`;
 }
 const SHIRT_D="M-7-4L-3-6Q0-4 3-6L7-4L6-1L4-2L4 6L-4 6L-4-2L-6-1Z";
+const HANGER=`<path d="M2-9a2 2 0 1 1 2 2v1.5" fill="none" stroke="var(--ink-2)" stroke-width="1"/><path d="M4-5.5L-4 0H12Z" fill="none" stroke="var(--ink-2)" stroke-width="1" stroke-linejoin="round"/><rect x="-2" y="0.5" width="12" height="8" rx="1.2" fill="var(--fabric)" stroke="var(--ink-2)" stroke-width=".5"/>`;
+// hanger line: each station's buffer track runs from the main rail (walkway side) out beside the station, in the gap to its right
+// one hanger workstation: buffer track (straight or curved to the operator's side), hangers, plate, terminal, utilities
+function hangerStation(t,lineNo){
+  let s="", pts=[];                                   // pts: points along the track from the rail outwards, with direction
+  const dir=t.top?-1:1, gx=t.x, ry=t.yRail;
+  const ex=t.op[0], ey=t.op[1];
+  let d;
+  if(HV.curved && t.hasOp){
+    const r=10, yTurn=ey-dir*r, hx=gx>ex? -1:1;       // run along the gap, bend, then run across to the operator's side
+    d=`M${gx} ${ry} V${yTurn} Q${gx} ${ey} ${gx+hx*r} ${ey} H${ex}`;
+    for(let y=ry+dir*7; dir<0? y>yTurn : y<yTurn; y+=dir*6.2) pts.push([gx,y,"v"]);
+    for(let x=gx+hx*(r+3); hx<0? x>ex+4 : x<ex-4; x+=hx*6.2) pts.push([x,ey,"h"]);
+  } else {
+    const yEnd = t.hasOp ? ey : t.yEnd+8*-dir;
+    d=`M${gx} ${ry} V${yEnd}`;
+    for(let y=ry+dir*7; dir<0? y>yEnd+3 : y<yEnd-3; y+=dir*6.2) pts.push([gx,y,"v"]);
+  }
+  if(HV.ret){ // empty return track alongside
+    const o=HV.curved&&t.hasOp? 0:5;
+    s += `<path d="${d}" fill="none" stroke="var(--rail)" stroke-width="1.6" stroke-opacity=".55" transform="translate(${HV.curved&&t.hasOp?4:5} ${HV.curved&&t.hasOp?(t.top?4:-4):0})"/>`;
+  }
+  s += `<path d="${d}" fill="none" stroke="var(--rail)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if(HV.rollers) pts.forEach(([x,y])=>{ s += `<circle cx="${x}" cy="${y}" r="1.5" fill="#f2f3f5" stroke="var(--ink-3)" stroke-width=".4"/>`; });
+  // hangers: full queue, garment + white hanger + blue clip
+  pts.forEach(([x,y,o],k)=>{ if(k%1) return;
+    if(o==="v") s += `<rect x="${x-7}" y="${y-1.6}" width="14" height="3.2" rx="1.2" fill="var(--garment)" stroke="var(--ink-2)" stroke-width=".3"/><rect x="${x-1}" y="${y-1.9}" width="2" height="3.8" fill="#2f6fd6"/>`;
+    else s += `<rect x="${x-1.6}" y="${y-7}" width="3.2" height="14" rx="1.2" fill="var(--garment)" stroke="var(--ink-2)" stroke-width=".3"/><rect x="${x-1.9}" y="${y-1}" width="3.8" height="2" fill="#2f6fd6"/>`; });
+  // station plate (line / station) + terminal on the post at the outer end
+  const ph=HV.plate2?18:12, sy = t.hasOp ? (t.top ? ey-10-ph : ey+10) : (t.top ? t.yEnd : t.yEnd-ph);
+  s += `<rect x="${gx-10}" y="${sy}" width="20" height="${ph}" rx="2" fill="var(--chip)"/>`;
+  if(HV.plate2) s += `<text x="${gx}" y="${sy+7.5}" text-anchor="middle" font-size="6.5" font-weight="700" fill="var(--chip-ink)" opacity=".8">${lineNo}</text><line x1="${gx-6}" y1="${sy+9}" x2="${gx+6}" y2="${sy+9}" stroke="var(--chip-ink)" stroke-opacity=".5" stroke-width=".5"/><text x="${gx}" y="${sy+16}" text-anchor="middle" font-size="7" font-weight="700" fill="var(--chip-ink)">${String(t.no).padStart(2,"0")}</text>`;
+  else s += `<text x="${gx}" y="${sy+9}" text-anchor="middle" font-size="7.5" font-weight="700" fill="var(--chip-ink)">${String(t.no).padStart(2,"0")}</text>`;
+  if(HV.terminal){ const ty = t.top? sy+ph+2 : sy-9; s += `<rect x="${gx+3}" y="${ty}" width="9" height="7" rx="1" fill="#ffffff" stroke="var(--ink-3)" stroke-width=".5"/><rect x="${gx+4.5}" y="${ty+1.3}" width="6" height="2.2" fill="#3b82f6"/>`; }
+  if(HV.utility && t.hasMc){ const [ux,uy]=t.util; s += `<circle cx="${ux}" cy="${uy}" r="2.6" fill="#ffffff" stroke="#2f6fd6" stroke-width="1.2"/><rect x="${ux+3.5}" y="${uy-2.2}" width="4.4" height="4.4" rx=".6" fill="#f2c94c" stroke="#a07a00" stroke-width=".4"/>`; }
+  return s;
+}
+// loading (infeed) / unloading (output) station: roller rail branching off the main rail, full of hangers, post with plate + terminal, worker, trolley
+function hangerEndStation(o){
+  const {kind,railX,railY,ox,vy,edgeX,no,lineNo}=o; let s="";
+  const ty=railY+vy*44, r=12, x0=railX+ox*r, xe=edgeX-ox*4;
+  const d=`M${railX} ${railY} V${ty-vy*r} Q${railX} ${ty} ${x0} ${ty} H${xe}`;
+  if(HV.ret) s += `<path d="M${railX-ox*5} ${railY} V${ty-vy*r+vy*5} Q${railX-ox*5} ${ty+vy*5} ${x0-ox*5} ${ty+vy*5} H${xe}" fill="none" stroke="var(--rail)" stroke-width="1.6" stroke-opacity=".55"/>`;
+  s += `<path d="${d}" fill="none" stroke="var(--rail)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const pts=[]; for(let x=x0+ox*4; ox<0? x>xe+3 : x<xe-3; x+=ox*5.6) pts.push(x);
+  if(HV.rollers || true) pts.forEach(x=>{ s += `<circle cx="${x}" cy="${ty}" r="1.7" fill="#f2f3f5" stroke="var(--ink-3)" stroke-width=".45"/>`; });
+  // full queue of garments on white hangers with blue clips (finished garments at unloading)
+  pts.forEach(x=>{ s += `<rect x="${x-1.7}" y="${ty+vy*-1.5-(vy<0?13:0)+ (vy<0?0:1.5)}" width="3.4" height="13" rx="1.2" fill="var(--garment)" stroke="var(--ink-2)" stroke-width=".3"/><rect x="${x-2}" y="${ty-1}" width="4" height="2" fill="#2f6fd6"/>`; });
+  // post: plate (line / station) + terminal, at the bend
+  const px=railX+ox*15, ph=18, py=(railY+ty)/2-ph/2+vy*-2;
+  s += `<rect x="${px-10}" y="${py}" width="20" height="${ph}" rx="2" fill="var(--chip)"/><text x="${px}" y="${py+7.5}" text-anchor="middle" font-size="6.5" font-weight="700" fill="var(--chip-ink)" opacity=".8">${lineNo}</text><line x1="${px-6}" y1="${py+9}" x2="${px+6}" y2="${py+9}" stroke="var(--chip-ink)" stroke-opacity=".5" stroke-width=".5"/><text x="${px}" y="${py+16}" text-anchor="middle" font-size="7" font-weight="700" fill="var(--chip-ink)">${String(no).padStart(2,"0")}</text>`;
+  if(HV.terminal){ const tY = py+ph/2-3.5; s += `<rect x="${px+ox*15-4.5}" y="${tY}" width="9" height="7" rx="1" fill="#ffffff" stroke="var(--ink-3)" stroke-width=".5"/><rect x="${px+ox*15-3}" y="${tY+1.3}" width="6" height="2.2" fill="#3b82f6"/>`; }
+  // direction of travel: pieces coming in (loading end) / going out (unloading end)
+  const ax=(railX+edgeX)/2, inward = kind==="load" ? -ox : ox;
+  s += `<path d="M${ax-inward*12} ${ty+vy*14} h${inward*20} m${-inward*6} -4 l${inward*6} 4 l${-inward*6} 4" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  s += `<text x="${ax}" y="${ty+vy*26+ (vy<0?0:6)}" text-anchor="middle" font-size="8" fill="var(--ink-3)">${kind==="load"?"pieces in":"pieces out"}</text>`;
+  return s;
+}
+function hangerGeom(t){
+  const dir=t.top?-1:1, gx=t.x, ry=t.yRail, ex=t.op[0], ey=t.op[1], g={segs:[],pts:[]};
+  if(HV.curved && t.hasOp){ const r=10, yTurn=ey-dir*r, hx=gx>ex?-1:1;
+    g.segs.push([gx,ry,gx,ey],[gx,ey,ex,ey]);
+    for(let y=ry+dir*7; dir<0? y>yTurn : y<yTurn; y+=dir*6.2) g.pts.push([gx,y,"v"]);
+    for(let x=gx+hx*(r+3); hx<0? x>ex+4 : x<ex-4; x+=hx*6.2) g.pts.push([x,ey,"h"]);
+  } else { const yEnd = t.hasOp ? ey : t.yEnd+8*-dir; g.segs.push([gx,ry,gx,yEnd]);
+    for(let y=ry+dir*7; dir<0? y>yEnd+3 : y<yEnd-3; y+=dir*6.2) g.pts.push([gx,y,"v"]); }
+  const ph=HV.plate2?18:12; g.plate={x:gx-10, y: t.hasOp ? (t.top ? ey-10-ph : ey+10) : (t.top ? t.yEnd : t.yEnd-ph), h:ph};
+  g.term = HV.terminal ? {x:gx+3, y: t.top? g.plate.y+ph+2 : g.plate.y-9} : null;
+  g.util = HV.utility && t.hasMc ? t.util : null;
+  return g;
+}
+function hangerTracks(units,fs,G,two){
+  const gap=fs.PITCH-fs.SW, r1=G.yTab+10, r2=G.yTab+G.TH-10;
+  return units.map((u,i)=>{ const top=u.side===0||!two, X=LM+u.x, Y=top?G.bandT:G.bandB;
+    const flip=!top && $("farside").value==="mirror", F=([px,py])=> flip? [X+fs.SW-px, Y+fs.BH-py] : [X+px, Y+py];
+    return {x:X+fs.SW+gap/2, no:i+2, top, yRail: top? r1 : r2, yEnd: top? Y+2 : Y+fs.BH-2, X, Y,
+      op:F(fs.op(15,3)), opc:F(fs.op(0,0)), util:F(fs.art(63,52)), hasMc:units[i].hasMc, hasOp:units[i].hasOp}; });
+}
+const HV_PRESETS={
+  B:{plate2:true,curved:true,rollers:true,ret:true,chain:true,terminal:true,utility:false,chair:"",garment:"#1f2f4d"},          // Detailed
+  A:{plate2:true,curved:true,rollers:true,ret:true,chain:true,terminal:true,utility:true,chair:"#b5d334",garment:"#22252b"},   // Realistic
+  C:{plate2:true,curved:false,rollers:false,ret:false,chain:false,terminal:true,utility:false,chair:"",garment:"#9db7d8"}};    // Clean plan
+let HV={...HV_PRESETS.B};
+const GARMENT_TOP=`<rect x="-1.4" y="-5" width="2.8" height="10" rx="1" fill="var(--garment)" stroke="var(--ink-2)" stroke-width=".4"/>`;
+const BUNDLE=`<rect x="-7" y="-5" width="14" height="10" rx="1.5" fill="var(--fabric)" stroke="var(--ink-2)" stroke-width=".6"/><path d="M-7 0H7M0-5V5" stroke="var(--surface)" stroke-width="1.1"/><rect x="2.5" y="1.5" width="4" height="2.6" fill="var(--surface)" stroke="var(--ink-3)" stroke-width=".3"/>`;
 
 function drawLayout(R,opt={}){
+  setMargins();
+  try{ const rs=document.documentElement.style; HV.chair? rs.setProperty("--chair",HV.chair) : rs.removeProperty("--chair"); HV.garment? rs.setProperty("--garment",HV.garment) : rs.removeProperty("--garment"); }catch(e){}
   const flags = opt.flags ?? $("flags").checked;
   const {map} = colorMap(); const {units,type}=buildLayout(R);
   const two = type!=="Single row", fs=frameSpec(), G=geomY(two,fs.BH);
   const maxX = Math.max(...units.map(u=>u.x))+fs.SW;
   const W = LM+maxX+RM, Hh=G.H;
-  const tabX1 = LM-50, tabX2 = LM+maxX+50, mid=G.yTab+G.TH/2;
+  const tabX1 = LM-50, tabX2 = LM+maxX+($("linesys").value==="hanger"?60:50), mid=G.yTab+G.TH/2;
   const bnSet = new Set(R.bn.map(o=>o.no));
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W*zoom}" height="${Hh*zoom}" viewBox="0 0 ${W} ${Hh}" font-family="IBM Plex Sans, sans-serif" role="img" aria-label="Stitching line layout">
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W*zoom}" height="${Hh*zoom}" viewBox="0 0 ${W} ${Hh}" font-family="Inter, Segoe UI, sans-serif" role="img" aria-label="Stitching line layout">
   <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink-2)"/></marker>
+  <marker id="aha" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--amber)"/></marker>
+  <pattern id="hazard" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="#f5c400"/><rect width="5" height="10" fill="#1f2937"/></pattern>
   <pattern id="rollers" width="8" height="10" patternUnits="userSpaceOnUse"><rect width="8" height="10" fill="var(--table)"/><line x1="4" y1="0" x2="4" y2="10" stroke="var(--table-stroke)" stroke-width="1.2"/></pattern></defs>`;
   // conveyor
-  s += `<rect x="${tabX1}" y="${G.yTab}" width="${tabX2-tabX1}" height="${G.TH}" rx="5" fill="var(--table-stroke)"/>`;
-  s += `<rect x="${tabX1+3}" y="${G.yTab+4}" width="${tabX2-tabX1-6}" height="${G.TH-8}" rx="3" fill="url(#rollers)"/>`;
+  // safety aisle markings along both sides of the line
+  s += `<line x1="${tabX1}" y1="5" x2="${tabX2}" y2="5" stroke="#d4a72c" stroke-width="2" stroke-dasharray="14 8" opacity=".8"/>`;
+  s += `<line x1="${tabX1}" y1="${Hh-6}" x2="${tabX2}" y2="${Hh-6}" stroke="#d4a72c" stroke-width="2" stroke-dasharray="14 8" opacity=".8"/>`;
+  const sys=$("linesys").value;
   let pathD;
-  if(type==="U-shape"){
-    pathD=`M${tabX1+8} ${mid-8} H${tabX2-22} Q${tabX2-8} ${mid-8} ${tabX2-8} ${mid} Q${tabX2-8} ${mid+8} ${tabX2-22} ${mid+8} H${tabX1+12}`;
-    s += `<text x="${tabX1-6}" y="${mid-4}" text-anchor="end" font-size="11" fill="var(--ink-2)">Input ▸</text><text x="${tabX1-6}" y="${mid+12}" text-anchor="end" font-size="11" font-weight="600" fill="var(--ink)">◂ Output</text>`;
+  let tracks=null;
+  if(sys==="hanger"){
+    // hanger (UPS) line: central walkway, main rail along each row (loop crosses the walkway at the ends), buffer track per station
+    const r1=G.yTab+10, r2=G.yTab+G.TH-10, rr=(r2-r1)/2, x1=tabX1+rr+2, x2=tabX2-rr-2;
+    // head frame: aluminium side beams + cross members, support posts
+    const fy1=r1-6, fy2=r2+6;
+    s += `<rect x="${x1-rr-6}" y="${fy1}" width="${x2-x1+2*rr+12}" height="${fy2-fy1}" rx="${rr+6}" fill="var(--frame)" stroke="var(--frame-edge)" stroke-width="1"/>`;
+    for(let bx=x1+18; bx<x2-8; bx+=34) s += `<rect x="${bx-1.5}" y="${r1+3}" width="3" height="${r2-r1-6}" fill="var(--frame-edge)" opacity=".55"/>`;
+    s += `<rect x="${x1}" y="${(r1+r2)/2-2}" width="${x2-x1}" height="4" fill="var(--frame-edge)" opacity=".55"/>`;
+    for(let bx=x1+18; bx<x2-8; bx+=136) s += `<rect x="${bx-4}" y="${(r1+r2)/2-4}" width="8" height="8" rx="1" fill="var(--ink-3)"/><rect x="${bx-2}" y="${(r1+r2)/2-2}" width="4" height="4" fill="var(--frame)"/>`;
+    pathD=`M${x1} ${r1} H${x2} A${rr} ${rr} 0 0 1 ${x2} ${r2} H${x1} A${rr} ${rr} 0 0 1 ${x1} ${r1} Z`;
+    s += `<path d="${pathD}" fill="none" stroke="var(--rail)" stroke-width="5" stroke-linejoin="round"/>`;
+    s += `<path id="flowP" d="${pathD}" fill="none" stroke="${HV.chain?"#c0392b":"var(--surface)"}" stroke-width="${HV.chain?1.4:1.2}" stroke-dasharray="${HV.chain?"2.5 1.5":"7 6"}"/>`;
+    for(let cx=tabX1+180; cx<tabX2-120; cx+=360) s += `<path d="M${cx-4} ${r1-4} l6 4 l-6 4" fill="none" stroke="var(--amber)" stroke-width="2"/><path d="M${cx+4} ${r2-4} l-6 4 l6 4" fill="none" stroke="var(--amber)" stroke-width="2"/>`;
+    // drive unit (motor + gearbox on the drive wheel) at the far end, tension unit at the start
+    { const dx=x2, dy=(r1+r2)/2;
+      s += `<circle cx="${dx}" cy="${dy}" r="${rr-6}" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 2"/>`;
+      s += `<rect x="${dx-14}" y="${dy-10}" width="22" height="20" rx="2" fill="#5b6675" stroke="var(--ink-2)" stroke-width=".6"/><circle cx="${dx-3}" cy="${dy}" r="6" fill="#8b95a3" stroke="#3b4350" stroke-width=".6"/><rect x="${dx+8}" y="${dy-6}" width="9" height="12" rx="1.5" fill="#3b82f6"/>`;
+      s += ``;
+      const tx=x1;
+      s += `<circle cx="${tx}" cy="${dy}" r="${rr-6}" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 2"/>`;
+      s += `<rect x="${tx-8}" y="${dy-8}" width="16" height="16" rx="2" fill="#8b95a3" stroke="var(--ink-2)" stroke-width=".6"/><path d="M${tx-5} ${dy}h10M${tx+2} ${dy-3}l3 3l-3 3" fill="none" stroke="#ffffff" stroke-width="1.2"/>`;
+      s += ``; }
+    { const lineNo=(String(data.info.lineName||"").match(/\d+/)||["01"])[0].padStart(2,"0"), last=units.length+2;
+      s += hangerEndStation({kind:"load", railX:x1+4, railY:r1, ox:-1, vy:-1, edgeX:14, no:1, lineNo});
+      s += hangerEndStation({kind:"unload", railX:x1+4, railY:r2, ox:-1, vy:1, edgeX:14, no:last, lineNo}); }
+    const plen=2*(x2-x1)+2*Math.PI*rr, nb=Math.max(8,Math.floor(plen/55)), dur=plen/28;
+    for(let b=0;b<nb;b++) s += `<g>${GARMENT_TOP}<animateMotion dur="${dur.toFixed(1)}s" begin="-${(b*dur/nb).toFixed(2)}s" repeatCount="indefinite" rotate="auto"><mpath href="#flowP"/></animateMotion></g>`;
+    tracks=hangerTracks(units,fs,G,two);
   } else {
-    pathD=`M${tabX1+8} ${mid} H${tabX2-10}`;
-    s += `<text x="${tabX1-6}" y="${mid+4}" text-anchor="end" font-size="11" fill="var(--ink-2)">Input ▸</text><text x="${tabX2+6}" y="${mid+4}" font-size="11" font-weight="600" fill="var(--ink)">Output ▸</text>`;
-  }
-  s += `<path id="flowP" d="${pathD}" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="6 5" marker-end="url(#ah)"/>`;
-  // moving garment bundles
-  const plen = type==="U-shape" ? 2*(tabX2-tabX1) : (tabX2-tabX1);
-  const nb=Math.max(3,Math.floor(plen/150)), dur=plen/32;
-  const bsc = type==="U-shape"?0.85:1.1;
-  for(let b=0;b<nb;b++){
-    s += `<g><g transform="scale(${bsc})"><path d="${SHIRT_D}" fill="var(--fabric)" stroke="var(--ink-2)" stroke-width=".7"/><rect x="-2" y="0" width="4" height="3" fill="var(--surface)"/></g><animateMotion dur="${dur.toFixed(1)}s" begin="-${(b*dur/nb).toFixed(2)}s" repeatCount="indefinite"><mpath href="#flowP"/></animateMotion></g>`;
+    // conventional (bundle) line: centre work table, bundles passed along it
+    s += `<rect x="${tabX1}" y="${G.yTab}" width="${tabX2-tabX1}" height="${G.TH}" rx="4" fill="var(--table)" stroke="var(--table-stroke)" stroke-width="1.5"/>`;
+    s += `<rect x="${tabX1+3}" y="${G.yTab+3}" width="${tabX2-tabX1-6}" height="${G.TH-6}" rx="2" fill="none" stroke="var(--table-stroke)" stroke-opacity=".5"/>`;
+    if(type==="U-shape"){
+      pathD=`M${tabX1+8} ${mid-8} H${tabX2-22} Q${tabX2-8} ${mid-8} ${tabX2-8} ${mid} Q${tabX2-8} ${mid+8} ${tabX2-22} ${mid+8} H${tabX1+12}`;
+      s += `<text x="${tabX1-6}" y="${mid-4}" text-anchor="end" font-size="11" fill="var(--ink-2)">Input ▸</text><text x="${tabX1-6}" y="${mid+12}" text-anchor="end" font-size="11" font-weight="600" fill="var(--ink)">◂ Output</text>`;
+    } else {
+      pathD=`M${tabX1+8} ${mid} H${tabX2-10}`;
+      s += `<text x="${tabX1-6}" y="${mid+4}" text-anchor="end" font-size="11" fill="var(--ink-2)">Input ▸</text><text x="${tabX2+6}" y="${mid+4}" font-size="11" font-weight="600" fill="var(--ink)">Output ▸</text>`;
+    }
+    s += `<path id="flowP" d="${pathD}" fill="none" stroke="var(--amber)" stroke-width="2" stroke-dasharray="10 7" stroke-linecap="round" marker-end="url(#aha)"/>`;
+    const plen = type==="U-shape" ? 2*(tabX2-tabX1) : (tabX2-tabX1);
+    const nb=Math.max(3,Math.floor(plen/150)), dur=plen/32, bsc = type==="U-shape"?0.85:1.1;
+    for(let b=0;b<nb;b++) s += `<g><g transform="scale(${bsc})">${BUNDLE}</g><animateMotion dur="${dur.toFixed(1)}s" begin="-${(b*dur/nb).toFixed(2)}s" repeatCount="indefinite"><mpath href="#flowP"/></animateMotion></g>`;
   }
   // section labels
   const runs=[]; [0,1].forEach(sd=>{ let cur=null; units.filter(u=>u.side===sd).forEach(u=>{ if(!cur||cur.sec!==u.op.section){ cur={sec:u.op.section,side:sd,xs:[]}; runs.push(cur);} cur.xs.push(u.x); }); });
@@ -487,7 +674,9 @@ function drawLayout(R,opt={}){
   runs.forEach(g=>{ const a=LM+Math.min(...g.xs), b=LM+Math.max(...g.xs)+fs.SW;
     const top = g.side===0, ly = top? G.yLab+6 : G.yLabB-10, ty = top? G.yLab : G.yLabB+2;
     s += `<path d="M${a} ${ly+(top?4:-4)} V${ly} H${b} V${ly+(top?4:-4)}" fill="none" stroke="var(--ink-3)"/>`;
-    s += `<text x="${(a+b)/2}" y="${ty}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-2)">${esc(g.sec.toUpperCase())}</text>`; });
+    { const t=g.sec.toUpperCase(), tw=t.length*7.4+18, cx=(a+b)/2;
+      s += `<rect x="${cx-tw/2}" y="${ty-11.5}" width="${tw}" height="16" rx="8" fill="var(--surface)" stroke="var(--line)"/>`;
+      s += `<text x="${cx}" y="${ty+0.5}" text-anchor="middle" font-size="10" font-weight="700" letter-spacing=".08em" fill="var(--ink-2)">${esc(t)}</text>`; } });
   // stations
   const lblMode=$("lbl").value;
   units.forEach((u,i)=>{
@@ -510,18 +699,23 @@ function drawLayout(R,opt={}){
     // upright text on the label area (back of the table / beside the operator)
     const lb=mirrorRect(fs.label,fs,flip), showNames=$("opnames").checked;
     const nm=showNames?wrapName(o.name,Math.floor((lb.w-10)/4.1)):[], ty0=Y+lb.y+9;
-    s += `<text x="${X+lb.x+5}" y="${ty0}" font-size="10" fill="var(--ink)"><tspan font-weight="700">${esc(tag)}</tspan> <tspan font-size="8.5" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">${esc(line2)}</tspan></text>`;
+    { const cw=String(tag).length*5.9+8;
+      s += `<rect x="${X+lb.x+4}" y="${ty0-9.5}" width="${cw}" height="12.5" rx="3" fill="var(--chip)"/>`;
+      s += `<text x="${X+lb.x+4+cw/2}" y="${ty0}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--chip-ink)">${esc(tag)}</text>`;
+      s += `<text x="${X+lb.x+8+cw}" y="${ty0}" font-size="8.5" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">${esc(line2)}</text>`; }
     nm.forEach((l,j)=>{ s += `<text x="${X+lb.x+5}" y="${ty0+9+j*8.5}" font-size="7.6" fill="var(--ink-2)">${esc(l)}</text>`; });
     if(bn){ const br=mirrorRect({x:fs.badge.x,y:fs.badge.y,w:24,h:14},fs,flip);
       s += `<g><rect x="${X+br.x}" y="${Y+br.y}" width="24" height="14" rx="7" fill="var(--crit)"/><text x="${X+br.x+12}" y="${Y+br.y+10}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">BN</text></g>`; }
     s += `</g>`;
   });
+  if(tracks){ const lineNo=(String(data.info.lineName||"").match(/\d+/)||["01"])[0].padStart(2,"0");
+   tracks.forEach(t=>{ s += hangerStation(t,lineNo); }); }
   s += `</svg>`;
   if(opt.stringOnly) return s;
   const wrap=$("lwrap"); wrap.innerHTML = s;
   const svg=wrap.querySelector("svg");
   wrap.classList.toggle("anim", animOn);
-  try{ if(!animOn) svg.pauseAnimations(); }catch(e){}
+  try{ if(!animOn){ svg.pauseAnimations(); svg.setCurrentTime(2); } }catch(e){}
   wrap.querySelectorAll(".station").forEach(g=>{
     const pick=()=>select(g.dataset.op);
     g.addEventListener("click",pick); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();} });
@@ -535,7 +729,7 @@ function drawLayout(R,opt={}){
     return `<span><i class="sw" style="border-color:${c};background:color-mix(in srgb, ${c} 20%, transparent)"></i><b class="mono">${esc(cd)}</b> ${esc(m?.desc||"")} ${n?`(${n})`:""}</span>`; }).join("");
   lg += `<span><svg width="22" height="22" viewBox="-12 -18 24 32"><g>${operatorArt("var(--shirt)",true,0)}</g></svg>Operator</span>`;
   if(R.totalHelpers) lg += `<span><svg width="22" height="22" viewBox="-12 -18 24 32"><g>${operatorArt("var(--helper)",true,0)}</g></svg>Helper (faces the operator)</span>`;
-  lg += `<span><svg width="20" height="18" viewBox="-9 -8 18 16"><path d="${SHIRT_D}" fill="var(--fabric)" stroke="var(--ink-2)" stroke-width=".7"/></svg>Garment bundle</span>`;
+  lg += $("linesys").value==="hanger" ? `<span><svg width="22" height="16"><rect x="1" y="1" width="20" height="14" rx="2" fill="var(--chip)"/><text x="11" y="7" text-anchor="middle" font-size="5.5" font-weight="700" fill="var(--chip-ink)">07</text><text x="11" y="13.5" text-anchor="middle" font-size="6" font-weight="700" fill="var(--chip-ink)">05</text></svg>Line / station number</span><span><svg width="24" height="12"><path d="M3 6h16m-5-4l5 4l-5 4" fill="none" stroke="var(--amber)" stroke-width="2"/></svg>Pieces in / out</span>` : `<span><svg width="20" height="16" viewBox="-9 -7 18 14">${BUNDLE}</svg>Garment bundle</span>`;
   if(flags){
   lg += `<span><svg width="20" height="16"><rect x="2" y="2" width="16" height="12" rx="3" fill="none" stroke="var(--crit)" stroke-dasharray="3 2" stroke-width="1.5"/></svg>Over required cycle (red shirt)</span>`;
   lg += `<span><svg width="26" height="16"><rect x="1" y="1" width="24" height="14" rx="7" fill="var(--crit)"/><text x="13" y="11" text-anchor="middle" font-size="8.5" font-weight="700" fill="#fff">BN</text></svg>Bottleneck</span>`; }
@@ -549,7 +743,7 @@ function drawChart(R){
   const W=L+n*(bw+gap)+120;
   const maxV=Math.max(R.req*1.15, ...R.ops.map(o=>isFinite(o.cycle)?o.cycle:0))*1.08;
   const y=v=>T+h-(v/maxV)*h;
-  const ticks=4; let s=`<svg width="${W}" height="${T+h+B}" viewBox="0 0 ${W} ${T+h+B}" font-family="IBM Plex Sans, sans-serif" role="img" aria-label="Line balance chart">`;
+  const ticks=4; let s=`<svg width="${W}" height="${T+h+B}" viewBox="0 0 ${W} ${T+h+B}" font-family="Inter, Segoe UI, sans-serif" role="img" aria-label="Line balance chart">`;
   for(let i=0;i<=ticks;i++){ const v=maxV*i/ticks; s+=`<line x1="${L}" x2="${W-110}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--ink-3)" font-family="IBM Plex Mono, monospace">${v.toFixed(2)}</text>`; }
   R.ops.forEach((o,i)=>{
     const x=L+i*(bw+gap)+gap/2, v=isFinite(o.cycle)?o.cycle:maxV, over=o.load>1.0001, yy=y(v), hh=T+h-yy;
@@ -619,6 +813,8 @@ function hideTip(){ tipEl.style.opacity=0; }
 /* ---------------- render ---------------- */
 let lastR=null;
 function render(){
+  $("hstyleWrap").hidden = $("linesys").value!=="hanger";
+  if($("linesys").value!=="hanger"){ HV={...HV_PRESETS[$("hstyle").value]}; }
   $("farside").disabled = $("ltype").value==="Single row";
   const I=data.info;
   I.target=Math.max(1,+$("target").value||I.target); I.hours=Math.max(0.5,+$("hours").value||I.hours); I.eff=Math.min(1,Math.max(0.01,(+$("eff").value||I.eff*100)/100));
@@ -631,6 +827,7 @@ function loadData(d,srcText,warn=[]){
   data=d; selected=null;
   const I=d.info; $("target").value=I.target; $("hours").value=I.hours; $("eff").value=Math.round(I.eff*100);
   const lt=/u/i.test(I.layout||"")&&!/two/i.test(I.layout)?"U-shape":/single|one|straight/i.test(I.layout||"")?"Single row":"Two-sided"; $("ltype").value=lt;
+  $("linesys").value=/hang|ups/i.test(String(I.sys||""))?"hanger":"conv";
   const ot=String(I.orient||""); $("orient").value=/back/i.test(ot)?"back":/side|90/i.test(ot)?"side":"facing";
   $("src").textContent=srcText;
   $("msgs").innerHTML=warn.map(w=>`<div class="msg">${esc(w)}</div>`).join("") + (d.ops.some(o=>o.operators==null||o.operators==="")?`<div class="msg">Operators were blank for some operations – allocated automatically (marked *).</div>`:"");
@@ -644,6 +841,7 @@ const xe=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt
 const r4=v=>Math.round(v*10000)/10000;
 
 function buildVsdxParts(R){
+  setMargins();
   const S=0.8;                       // 1 screen px = 0.8 real inches → machine 4 ft × 2.5 ft
   const {map,order}=colorMap(); const {units,type}=buildLayout(R); const two=type!=="Single row";
   const I=data.info;
@@ -651,7 +849,7 @@ function buildVsdxParts(R){
   const maxX=Math.max(...units.map(u=>u.x))+fs.SW;
   const {yLab,bandT,yTab,TH,bandB,yLabB,H:layoutH}=geomY(two,fs.BH);
   const TOP=90, perRow=4, legRows=Math.ceil((order.length+4)/perRow), LEGH=50+legRows*30;
-  const Wpx=Math.max(LM+maxX+RM, perRow*300+60), Hpx=TOP+layoutH+LEGH;
+  const Wpx=Math.max(LM+maxX+RM, perRow*300+60+480), Hpx=TOP+layoutH+Math.max(LEGH,150);
   const AX=px=>px*S, AY=py=>(Hpx-py)*S;             // absolute, Visio y is up
   let id=1;
   const C=(n,v,u)=>`<Cell N="${n}" V="${typeof v==="number"?r4(v):xe(v)}"${u?` U="${u}"`:""}/>`;
@@ -685,24 +883,43 @@ function buildVsdxParts(R){
   // title block
   const bn=R.bn.map(o=>o.no).join(", ");
   out.push(text(AX(20),AY(48),AX(Wpx-40),AX(34),`${I.lineName||"Line layout"}${I.style?" – "+I.style:""}${I.buyer?" · "+I.buyer:""}`,{pt:16,bold:true,align:0,name:"Title"}));
-  out.push(text(AX(20),AY(80),AX(Wpx-40),AX(28),`${type} layout · ${$("orient").selectedOptions[0].text} · Target ${I.target} pcs/day · ${I.hours} h · Eff ${Math.round(I.eff*100)}% · Total SMV ${R.totalSMV.toFixed(2)} · Takt ${R.takt.toFixed(3)} min · Operators ${R.totalOps} · Machines ${R.totalMc}`,{pt:9,align:0,color:"#52514E",name:"Summary"}));
+  out.push(text(AX(20),AY(80),AX(Wpx-40),AX(28),`${$("linesys").selectedOptions[0].text} · ${type} layout · ${$("orient").selectedOptions[0].text} · Target ${I.target} pcs/day · ${I.hours} h · Eff ${Math.round(I.eff*100)}% · Total SMV ${R.totalSMV.toFixed(2)} · Takt ${R.takt.toFixed(3)} min · Operators ${R.totalOps} · Machines ${R.totalMc}`,{pt:9,align:0,color:"#52514E",name:"Summary"}));
   const T=y=>TOP+y; // layout px y → page px y
   // work table
-  const tabX1=LM-50, tabX2=LM+maxX+50;
-  out.push(shape({name:"Conveyor",x:AX(tabX1),y:AY(T(yTab+TH)),w:AX(tabX2-tabX1),h:AX(TH),fill:"#BDB6A2",line:"#BDB6A2",round:AX(5)}));
-  out.push(shape({name:"Conveyor belt",x:AX(tabX1+3),y:AY(T(yTab+TH-4)),w:AX(tabX2-tabX1-6),h:AX(TH-8),fill:"#E6E1D3",line:"#BDB6A2",round:AX(3),text:"CONVEYOR / WORK TABLE",pt:6,tcolor:"#8A8983",valign:2}));
-  for(let bx=tabX1+60;bx<tabX2-40;bx+=170){ out.push(shape({name:"Garment bundle",x:AX(bx),y:AY(T(yTab+TH/2+7)),w:AX(18),h:AX(14),fill:"#9DB7D8",line:"#52514E",lw:0.5,round:AX(2),text:"▤",pt:6})); }
-  const mid=T(yTab+TH/2);
-  if(type==="U-shape"){
-    out.push(line(AX(tabX1+8),AY(mid-8),AX(tabX2-10),AY(mid-8),{dash:true,name:"Flow"}));
-    out.push(line(AX(tabX2-10),AY(mid-8),AX(tabX2-10),AY(mid+8),{dash:true,name:"Flow"}));
-    out.push(line(AX(tabX2-10),AY(mid+8),AX(tabX1+10),AY(mid+8),{dash:true,arrow:true,name:"Flow"}));
-    out.push(text(AX(4),AY(mid),AX(tabX1-6),AX(14),"Input ▸",{pt:8,align:2}));
-    out.push(text(AX(4),AY(mid+16),AX(tabX1-6),AX(14),"◂ Output",{pt:8,bold:true,align:2}));
+  const tabX1=LM-50, tabX2=LM+maxX+($("linesys").value==="hanger"?60:50);
+  const mid=T(yTab+TH/2), sys=$("linesys").value;
+  let vTracks=null, vEnds=null;
+  const GARM=HV.garment||"#9DB7D8", RAIL="#857D6B";
+  if(sys==="hanger"){
+    const r1=yTab+10, r2=yTab+TH-10, rr=(r2-r1)/2, x1=tabX1+rr+2, x2=tabX2-rr-2, cy=(r1+r2)/2;
+    const R=(x,y,w,h,p)=>out.push(shape({x:AX(x),y:AY(T(y+h)),w:AX(w),h:AX(h),...p}));
+    R(x1-rr-6,r1-6,x2-x1+2*rr+12,r2-r1+12,{name:"Frame",fill:"#E6E9ED",line:"#B7BEC8",lw:0.75,round:AX(rr+6)});
+    for(let bx=x1+18; bx<x2-8; bx+=34) R(bx-1.5,r1+3,3,r2-r1-6,{name:"Cross member",fill:"#C9CFD7",line:"#C9CFD7",lw:0.25});
+    R(x1,cy-2,x2-x1,4,{name:"Centre member",fill:"#C9CFD7",line:"#C9CFD7",lw:0.25});
+    for(let bx=x1+18; bx<x2-8; bx+=136) R(bx-4,cy-4,8,8,{name:"Post",fill:"#8B95A3",line:"#8B95A3",lw:0.25,round:AX(1)});
+    R(x1-rr,r1-2.5,x2-x1+2*rr,5,{name:"Rail",fill:RAIL,line:RAIL,lw:0.25}); R(x1-rr,r2-2.5,x2-x1+2*rr,5,{name:"Rail",fill:RAIL,line:RAIL,lw:0.25});
+    R(x1-rr-2.5,r1-2.5,5,r2-r1+5,{name:"Rail",fill:RAIL,line:RAIL,lw:0.25}); R(x2+rr-2.5,r1-2.5,5,r2-r1+5,{name:"Rail",fill:RAIL,line:RAIL,lw:0.25});
+    if(HV.chain){ R(x1-rr,r1-0.6,x2-x1+2*rr,1.2,{name:"Chain",fill:"#C0392B",line:"#C0392B",lw:0.25}); R(x1-rr,r2-0.6,x2-x1+2*rr,1.2,{name:"Chain",fill:"#C0392B",line:"#C0392B",lw:0.25}); }
+    R(x2-14,cy-10,22,20,{name:"Unit",fill:"#5B6675",line:"#52514E",lw:0.5,round:AX(2)}); R(x2+8,cy-6,9,12,{name:"Unit",fill:"#3B82F6",line:"#3B82F6",lw:0.25,round:AX(1.5)});
+    R(x1-8,cy-8,16,16,{name:"Unit",fill:"#8B95A3",line:"#52514E",lw:0.5,round:AX(2)});
+    for(let ax=tabX1+180; ax<tabX2-120; ax+=360){ out.push(line(AX(ax-6),AY(T(r1)),AX(ax+8),AY(T(r1)),{color:"#F59E0B",lw:2,arrow:true,name:"Direction"})); out.push(line(AX(ax+6),AY(T(r2)),AX(ax-8),AY(T(r2)),{color:"#F59E0B",lw:2,arrow:true,name:"Direction"})); }
+    vTracks=hangerTracks(units,fs,{yTab,TH,bandT,bandB},two);
+    const lineNo=(String(I.lineName||"").match(/\d+/)||["01"])[0].padStart(2,"0");
+    vEnds=[{kind:"load",railX:x1+4,railY:r1,ox:-1,vy:-1,edgeX:14,no:1,lineNo},{kind:"unload",railX:x1+4,railY:r2,ox:-1,vy:1,edgeX:14,no:units.length+2,lineNo}];
   } else {
-    out.push(line(AX(tabX1+8),AY(mid),AX(tabX2-10),AY(mid),{dash:true,arrow:true,name:"Flow"}));
-    out.push(text(AX(4),AY(mid+7),AX(tabX1-6),AX(14),"Input ▸",{pt:8,align:2}));
-    out.push(text(AX(tabX2+4),AY(mid+7),AX(RM-54),AX(14),"Output ▸",{pt:8,bold:true,align:0}));
+    out.push(shape({name:"Centre work table",x:AX(tabX1),y:AY(T(yTab+TH)),w:AX(tabX2-tabX1),h:AX(TH),fill:"#E6E1D3",line:"#BDB6A2",lw:1.25,round:AX(4),text:"CENTRE WORK TABLE",pt:6,tcolor:"#8A8983",valign:2}));
+    for(let bx=tabX1+60;bx<tabX2-40;bx+=170){ out.push(shape({name:"Garment bundle",x:AX(bx),y:AY(T(yTab+TH/2+7)),w:AX(18),h:AX(14),fill:"#9DB7D8",line:"#52514E",lw:0.5,round:AX(2)})); }
+    if(type==="U-shape"){
+      out.push(line(AX(tabX1+8),AY(mid-8),AX(tabX2-10),AY(mid-8),{dash:true,name:"Flow"}));
+      out.push(line(AX(tabX2-10),AY(mid-8),AX(tabX2-10),AY(mid+8),{dash:true,name:"Flow"}));
+      out.push(line(AX(tabX2-10),AY(mid+8),AX(tabX1+10),AY(mid+8),{dash:true,arrow:true,name:"Flow"}));
+      out.push(text(AX(4),AY(mid),AX(tabX1-6),AX(14),"Input ▸",{pt:8,align:2}));
+      out.push(text(AX(4),AY(mid+16),AX(tabX1-6),AX(14),"◂ Output",{pt:8,bold:true,align:2}));
+    } else {
+      out.push(line(AX(tabX1+8),AY(mid),AX(tabX2-10),AY(mid),{dash:true,arrow:true,name:"Flow"}));
+      out.push(text(AX(4),AY(mid+7),AX(tabX1-6),AX(14),"Input ▸",{pt:8,align:2}));
+      out.push(text(AX(tabX2+4),AY(mid+7),AX(RM-54),AX(14),"Output ▸",{pt:8,bold:true,align:0}));
+    }
   }
   // section labels
   const runs=[]; [0,1].forEach(sd=>{ let cur=null; units.filter(u=>u.side===sd).forEach(u=>{ if(!cur||cur.sec!==u.op.section){ cur={sec:u.op.section,side:sd,xs:[]}; runs.push(cur);} cur.xs.push(u.x); }); });
@@ -783,6 +1000,35 @@ function buildVsdxParts(R){
     g+=propSec(props)+`<Shapes>${kids.join("")}</Shapes></Shape>`;
     out.push(g);
   });
+  const plate=(kids,og,x,y,h,lineNo,no)=>{ kids.push(shape({name:"Station plate",x:AX(x),y:AY(T(y+h)),w:AX(20),h:AX(h),fill:"#1E3A5F",line:"#1E3A5F",round:AX(2),text:HV.plate2?`${lineNo}\n${String(no).padStart(2,"0")}`:String(no).padStart(2,"0"),pt:5.5,bold:true,tcolor:"#FFFFFF"},og)); };
+  const terminal=(kids,og,x,y)=>{ kids.push(shape({name:"Terminal",x:AX(x),y:AY(T(y+7)),w:AX(9),h:AX(7),fill:"#FFFFFF",line:"#8B95A3",lw:0.4,round:AX(1)},og)); kids.push(shape({name:"Terminal screen",x:AX(x+1.5),y:AY(T(y+3.5)),w:AX(6),h:AX(2.2),fill:"#3B82F6",line:"#3B82F6",lw:0.25},og)); };
+  const groupOut=(name,kids,bx1,by1,bx2,by2,props)=>{ const gx=AX(bx1), gw=AX(bx2-bx1), gy=AY(T(by2)), gh=AX(by2-by1);
+    let g=`<Shape ID="${id++}" NameU="${xe(name)}" Name="${xe(name)}" Type="Group" LineStyle="0" FillStyle="0" TextStyle="0">`+C("PinX",gx+gw/2)+C("PinY",gy+gh/2)+C("Width",gw)+C("Height",gh)+C("LocPinX",gw/2)+C("LocPinY",gh/2)+C("Angle",0);
+    g+=(props?propSec(props):"")+`<Shapes>${kids.join("")}</Shapes></Shape>`; out.push(g); };
+  if(vTracks){ const lineNo=(String(I.lineName||"").match(/\d+/)||["01"])[0].padStart(2,"0");
+    vTracks.forEach(t=>{ const g=hangerGeom(t), xs=[], ys=[];
+      g.segs.forEach(([a1,b1,a2,b2])=>{ xs.push(a1,a2); ys.push(b1,b2); }); xs.push(g.plate.x,g.plate.x+20); ys.push(g.plate.y,g.plate.y+g.plate.h);
+      if(g.util){ xs.push(g.util[0]-3,g.util[0]+8); ys.push(g.util[1]-3,g.util[1]+3); }
+      const bx1=Math.min(...xs)-8, bx2=Math.max(...xs)+12, by1=Math.min(...ys)-10, by2=Math.max(...ys)+10, og={x:AX(bx1),y:AY(T(by2))}, kids=[];
+      g.segs.forEach(([a1,b1,a2,b2])=>{ const v=a1===a2; kids.push(shape({name:"Station track",x:AX(Math.min(a1,a2)-(v?1.3:0)),y:AY(T(Math.max(b1,b2)+(v?0:1.3))),w:AX(v?2.6:Math.abs(a2-a1)),h:AX(v?Math.abs(b2-b1):2.6),fill:RAIL,line:RAIL,lw:0.25},og)); });
+      g.pts.forEach(([x,y,o])=>{ if(o==="v") kids.push(shape({name:"Hanger",x:AX(x-7),y:AY(T(y+1.6)),w:AX(14),h:AX(3.2),fill:GARM,line:"#52514E",lw:0.2,round:AX(1)},og));
+        else kids.push(shape({name:"Hanger",x:AX(x-1.6),y:AY(T(y+7)),w:AX(3.2),h:AX(14),fill:GARM,line:"#52514E",lw:0.2,round:AX(1)},og)); });
+      plate(kids,og,g.plate.x,g.plate.y,g.plate.h,lineNo,t.no);
+      if(g.term) terminal(kids,og,g.term.x,g.term.y);
+      if(g.util){ kids.push(shape({name:"Air",x:AX(g.util[0]-2.6),y:AY(T(g.util[1]+2.6)),w:AX(5.2),h:AX(5.2),fill:"#FFFFFF",line:"#2F6FD6",lw:1,ellipse:true},og)); kids.push(shape({name:"Power",x:AX(g.util[0]+3.5),y:AY(T(g.util[1]+2.2)),w:AX(4.4),h:AX(4.4),fill:"#F2C94C",line:"#A07A00",lw:0.3},og)); }
+      groupOut(`Station ${String(t.no).padStart(2,"0")}`,kids,bx1,by1,bx2,by2,[["StationNo","Station number",`${lineNo}/${String(t.no).padStart(2,"0")}`]]);
+    }); }
+  if(vEnds) vEnds.forEach(e=>{ const {kind,railX,railY,ox,vy,edgeX,no,lineNo}=e, ty=railY+vy*44, xe2=edgeX-ox*4, kids=[];
+    const bx1=Math.min(edgeX,railX)-6, bx2=Math.max(edgeX,railX)+40, by1=Math.min(railY,ty)-30, by2=Math.max(railY,ty)+30, og={x:AX(bx1),y:AY(T(by2))};
+    kids.push(shape({name:"Rail",x:AX(railX-1.5),y:AY(T(Math.max(railY,ty))),w:AX(3),h:AX(Math.abs(ty-railY)),fill:RAIL,line:RAIL,lw:0.25},og));
+    kids.push(shape({name:"Rail",x:AX(Math.min(railX,xe2)),y:AY(T(ty+1.5)),w:AX(Math.abs(xe2-railX)),h:AX(3),fill:RAIL,line:RAIL,lw:0.25},og));
+    for(let x=railX+ox*16; ox<0? x>xe2+3 : x<xe2-3; x+=ox*5.6) kids.push(shape({name:"Hanger",x:AX(x-1.7),y:AY(T(vy<0? ty : ty+13)),w:AX(3.4),h:AX(13),fill:GARM,line:"#52514E",lw:0.2,round:AX(1)},og));
+    const px=railX+ox*15, py=(railY+ty)/2-9+vy*-2; plate(kids,og,px-10,py,18,lineNo,no); if(HV.terminal) terminal(kids,og,px+ox*15-4.5,py+5.5);
+    const ax=(railX+edgeX)/2, inward=kind==="load"?-ox:ox;
+    kids.push(line(AX(ax-inward*12),AY(T(ty+vy*14)),AX(ax+inward*8),AY(T(ty+vy*14)),{color:"#F59E0B",lw:2,arrow:true,name:"Direction"}).replace(/<Shape /,"<Shape ").replace(/PinX" V="([\d.]+)"/,(m,v)=>`PinX" V="${r4(+v-og.x)}"`).replace(/PinY" V="([\d.]+)"/,(m,v)=>`PinY" V="${r4(+v-og.y)}"`));
+    kids.push(shape({name:"Label",x:AX(ax-40),y:AY(T(ty+vy*26+(vy<0?3:9))),w:AX(80),h:AX(12),noFill:true,noLine:true,text:kind==="load"?"pieces in":"pieces out",pt:6,tcolor:"#8B95A3"},og));
+    groupOut(kind==="load"?"Pieces in":"Pieces out",kids,bx1,by1,bx2,by2,[["StationNo","Station number",`${lineNo}/${String(no).padStart(2,"0")}`]]);
+  });
   // legend
   const ly0=TOP+layoutH+16;
   out.push(text(AX(20),AY(ly0+18),AX(300),AX(18),"Legend",{pt:10,bold:true,align:0}));
@@ -794,6 +1040,16 @@ function buildVsdxParts(R){
     out.push(text(AX(cx+30),AY(cy+16),AX(260),AX(16),it.t,{pt:8,align:0,name:"Legend text"}));
   });
 
+  // drawing frame and engineering title block (bottom right)
+  out.push(shape({name:"Drawing frame",x:AX(6),y:AY(Hpx-6),w:AX(Wpx-12),h:AX(Hpx-12),noFill:true,line:"#1F3A5F",lw:1.5}));
+  { const bw=440, bh=118, bx=Wpx-12-bw, by=Hpx-12-bh, NAVYV="#0F172A";
+    out.push(shape({name:"Title block",x:AX(bx),y:AY(by+bh),w:AX(bw),h:AX(bh),fill:"#FFFFFF",line:"#1F3A5F",lw:1.25}));
+    out.push(shape({name:"Title block header",x:AX(bx),y:AY(by+30),w:AX(bw),h:AX(30),fill:NAVYV,line:"#1F3A5F",lw:1.25,text:"STITCHING LINE LAYOUT",pt:10,bold:true,tcolor:"#FFFFFF"}));
+    out.push(shape({name:"Title block accent",x:AX(bx),y:AY(by+33),w:AX(bw),h:AX(3),fill:"#3B5B85",line:"#3B5B85",lw:0.25}));
+    const rows=[["Line",I.lineName||"-"],["Style / order",I.style||"-"],["Buyer",I.buyer||"-"],["Layout",`${$("linesys").value==="hanger"?"Hanger line":"Conventional"} · ${type} · ${$("orient").selectedOptions[0].text}`],["Date",new Date().toISOString().slice(0,10)],["Scale",`1/4" = 1'-0"`]];
+    rows.forEach(([k,v],i)=>{ const col=i%2, row=Math.floor(i/2), cx=bx+col*bw/2, cy=by+36+row*27;
+      out.push(shape({name:"Title cell",x:AX(cx),y:AY(cy+27),w:AX(bw/2),h:AX(27),noFill:true,line:"#BDB6A2",lw:0.5,text:`${k}\n${v}`,pt:6.5,align:0,valign:1}));
+    }); }
   const PW=AX(Wpx), PH=AX(Hpx);
   const NS=`xmlns="http://schemas.microsoft.com/office/visio/2012/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`;
   const X='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
@@ -857,7 +1113,7 @@ async function generateVisio(){
 }
 
 /* ---------------- PDF report ---------------- */
-const LIGHT={"--bg":"#f4f3ef","--surface":"#fcfcfb","--surface-2":"#efeee9","--line":"#dcdad3","--grid":"#e8e6df","--ink":"#0b0b0b","--ink-2":"#52514e","--ink-3":"#8a8983","--accent":"#1f3a5f","--crit":"#c62828","--warn":"#b26a00","--good":"#2e7d32","--table":"#e6e1d3","--table-stroke":"#bdb6a2","--mach":"#dedbd2","--fabric":"#9db7d8","--skin":"#c99a74","--hair":"#2f2a26","--shirt":"#3e4a5c","--helper":"#5f7a3a",...VHEX};
+const LIGHT={"--bg":"#f4f5f7","--surface":"#ffffff","--surface-2":"#f6f7f9","--line":"#e2e5ea","--grid":"#eef0f3","--ink":"#111827","--ink-2":"#4b5563","--ink-3":"#8b95a3","--accent":"#1e3a5f","--crit":"#c62828","--warn":"#b26a00","--good":"#2e7d32","--table":"#e6e1d3","--table-stroke":"#bdb6a2","--mach":"#dedbd2","--fabric":"#9db7d8","--skin":"#c99a74","--hair":"#2f2a26","--shirt":"#3e4a5c","--helper":"#5f7a3a","--amber":"#f59e0b","--rail":"#857d6b","--chip":"#1e3a5f","--chip-ink":"#ffffff",...VHEX};
 // serialize an on-screen SVG for print: light colours, bundles frozen in place, no selection
 function svgForPrint(svg,scale){
   const clone=svg.cloneNode(true), vb=svg.viewBox.baseVal;
@@ -868,7 +1124,8 @@ function svgForPrint(svg,scale){
       const pt=live.getPointAtLength(((beg%dur)/dur)*len); cm[i].parentNode.setAttribute("transform",`translate(${pt.x} ${pt.y})`); cm[i].remove(); }); }
   clone.querySelectorAll(".sel").forEach(e=>e.classList.remove("sel"));
   clone.querySelectorAll("[stroke-width='3']").forEach(e=>e.setAttribute("stroke-width","2"));
-  return new XMLSerializer().serializeToString(clone).replace(/var\((--[\w-]+)\)/g,(m,n)=>LIGHT[n]||"#888888");
+  const OV={"--garment":HV.garment||"#9db7d8","--chair":HV.chair||"#eef0f3","--frame":"#e6e9ed","--frame-edge":"#b7bec8","--epoxy":"#eceef1"};
+  return new XMLSerializer().serializeToString(clone).replace(/var\((--[\w-]+)\)/g,(m,n)=>OV[n]||LIGHT[n]||"#888888");
 }
 async function svgToCanvas(svg,scale){
   const vb=svg.viewBox.baseVal; let s=scale;
@@ -888,21 +1145,23 @@ async function buildPdfBytes(){
   const F=await doc.embedFont(StandardFonts.Helvetica), FB=await doc.embedFont(StandardFonts.HelveticaBold);
   const cs=new Set(F.getCharacterSet()); const safe=t=>[...String(t??"")].map(ch=>cs.has(ch.codePointAt(0))?ch:(ch==="▲"?"^":ch==="▸"?">":ch==="◂"?"<":"-")).join("");
   const hex=h=>{ h=String(h).replace("#",""); if(h.length===3) h=h.split("").map(c=>c+c).join(""); const n=parseInt(h.slice(0,6),16); return rgb((n>>16&255)/255,(n>>8&255)/255,(n&255)/255); };
-  const INK=hex("#0b0b0b"), INK2=hex("#52514e"), INK3=hex("#8a8983"), LINE=hex("#dcdad3"), CRIT=hex("#c62828"), ACC=hex("#1f3a5f");
+  const NAVY=hex("#0f172a"), AMBER=hex("#f59e0b"), WHITE=hex("#ffffff"), INK=hex("#0b0b0b"), INK2=hex("#52514e"), INK3=hex("#8a8983"), LINE=hex("#dcdad3"), CRIT=hex("#c62828"), ACC=hex("#1f3a5f");
   const SIZES={A3:[1190.55,841.89],A2:[1683.78,1190.55],A1:[2383.94,1683.78],A0:[3370.39,2383.94]};
   const M=36; let PW, PH, AW, page, y;
   const text=(t,x,yy,o={})=>page.drawText(safe(t),{x,y:yy,size:o.size||9,font:o.bold?FB:F,color:o.color||INK});
   const textR=(t,xr,yy,o={})=>{ const s=safe(t), f=o.bold?FB:F, sz=o.size||9; page.drawText(s,{x:xr-f.widthOfTextAtSize(s,sz),y:yy,size:sz,font:f,color:o.color||INK}); };
   const fit=(t,w,sz,f=F)=>{ let s=safe(t); if(f.widthOfTextAtSize(s,sz)<=w) return s; while(s.length>1 && f.widthOfTextAtSize(s+"...",sz)>w) s=s.slice(0,-1); return s+"..."; };
-  const orientTxt=$("orient").selectedOptions[0].text, typeTxt=$("ltype").value, far=$("farside").disabled?"":` · far side: ${$("farside").value==="mirror"?"mirrored":"same direction"}`;
+  const orientTxt=$("orient").selectedOptions[0].text, typeTxt=$("linesys").selectedOptions[0].text+" · "+$("ltype").value, far=$("farside").disabled?"":` · far side: ${$("farside").value==="mirror"?"mirrored":"same direction"}`;
   function newPage(size="A3"){
     [PW,PH]=SIZES[size]; AW=PW-2*M;
     page=doc.addPage([PW,PH]);
-    text(`${I.lineName||"Line layout"}${I.style?"  –  "+I.style:""}${I.buyer?"  ·  "+I.buyer:""}`,M,PH-M-14,{size:15,bold:true});
-    textR(new Date().toISOString().slice(0,10),PW-M,PH-M-12,{size:9,color:INK3});
-    text(`${typeTxt} layout · ${orientTxt}${far} · Target ${I.target} pcs/day · ${I.hours} h/day · Planned efficiency ${Math.round(I.eff*100)}%`,M,PH-M-30,{size:9,color:INK2});
-    page.drawLine({start:{x:M,y:PH-M-38},end:{x:PW-M,y:PH-M-38},thickness:0.75,color:LINE});
-    y=PH-M-52;
+    const bandH=M+40;
+    page.drawRectangle({x:0,y:PH-bandH,width:PW,height:bandH,color:NAVY});
+    page.drawRectangle({x:0,y:PH-bandH-2,width:PW,height:2,color:hex("#3b5b85")});
+    text(`${I.lineName||"Line layout"}${I.style?"  –  "+I.style:""}${I.buyer?"  ·  "+I.buyer:""}`,M,PH-M-12,{size:15,bold:true,color:WHITE});
+    textR(`Stitching Line Layout  ·  ${new Date().toISOString().slice(0,10)}`,PW-M,PH-M-10,{size:9,color:hex("#cbd5e1")});
+    text(`${typeTxt} layout · ${orientTxt}${far} · Target ${I.target} pcs/day · ${I.hours} h/day · Planned efficiency ${Math.round(I.eff*100)}%`,M,PH-M-28,{size:9,color:hex("#cbd5e1")});
+    y=PH-bandH-18;
   }
   const need=h=>{ if(y-h<M+18) newPage(); };
   const heading=(t,x=M)=>{ need(30); text(t,x,y-12,{size:12,bold:true}); y-=24; };
@@ -924,7 +1183,7 @@ async function buildPdfBytes(){
   const sc=Math.min(AW/widest, mode==='strips'?1.2:1.5), stripH=L.h*sc;
   // legend set-up first: it sits centred under the layout, as wide as the layout
   const {map,order}=colorMap(); const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const cnt=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0); return [toHex(map[cd]),`${cd}  ${m?.desc||""}${cnt?` (${cnt})`:""}`]; });
-  items.push(["#3e4a5c","Operator"],...(R.totalHelpers?[["#5f7a3a","Helper (faces the operator)"]]:[]),["#efeee9","Manual / helper table"]);
+  items.push(...($("linesys").value==="hanger"?[["#1e3a5f","Line / station number"]]:[]),["#3e4a5c","Operator"],...(R.totalHelpers?[["#5f7a3a","Helper (faces the operator)"]]:[]),["#efeee9","Manual / helper table"]);
   const legW=Math.min(AW,Math.max(widest*sc,640)), legX=M+(AW-legW)/2, per=Math.max(3,Math.floor(legW/270)), cw=legW/per, legRows=Math.ceil(items.length/per), legH=18+legRows*16;
   // page 1: every block centred on the page; whole-line modes also share the spare height evenly above and below
   const hc=(t,sz=12)=>M+(AW-FB.widthOfTextAtSize(safe(t),sz))/2;
@@ -941,6 +1200,7 @@ async function buildPdfBytes(){
   const kw=(legW-(k.length-1)*8)/k.length;
   k.forEach(([l,v,sub],i)=>{ const x=legX+i*(kw+8);
     page.drawRectangle({x,y:y-56,width:kw,height:56,borderColor:LINE,borderWidth:0.75,color:hex("#fcfcfb")});
+    page.drawRectangle({x,y:y-3,width:kw,height:3,color:hex("#1f3a5f")});
     text(l,x+8,y-14,{size:8,color:INK2}); text(v,x+8,y-34,{size:17,bold:true,color:INK});
     text(fit(sub,kw-14,7),x+8,y-48,{size:7,color:INK3}); });
   y-=72;
@@ -989,11 +1249,12 @@ async function buildPdfBytes(){
   need(30); text("Required cycle = takt time x planned efficiency. * = operators allocated automatically.",M,y-10,{size:7.5,color:INK3});
 
   function drawTable(cols,rows,style){
-    const rh=15, head=()=>{ need(rh*2); let x=TX; page.drawRectangle({x:TX,y:y-rh,width:cols.reduce((a,c)=>a+c[1],0),height:rh,color:hex("#efeee9")});
-      cols.forEach(([h,w,al])=>{ al==="r"?textR(h,x+w-5,y-10.5,{size:8,bold:true,color:INK2}):text(h,x+5,y-10.5,{size:8,bold:true,color:INK2}); x+=w; }); y-=rh; };
+    const rh=15, head=()=>{ need(rh*2); let x=TX; page.drawRectangle({x:TX,y:y-rh,width:cols.reduce((a,c)=>a+c[1],0),height:rh,color:hex("#1f3a5f")});
+      cols.forEach(([h,w,al])=>{ al==="r"?textR(h,x+w-5,y-10.5,{size:8,bold:true,color:WHITE}):text(h,x+5,y-10.5,{size:8,bold:true,color:WHITE}); x+=w; }); y-=rh; };
     head();
     rows.forEach((r,i)=>{ if(y-rh<M+18){ newPage(); head(); }
       const st=style(r,i); let x=TX;
+      if(i%2===1) page.drawRectangle({x:TX,y:y-rh,width:cols.reduce((a,c)=>a+c[1],0),height:rh,color:hex("#f4f3ef")});
       cols.forEach(([h,w,al],j)=>{ const v=fit(r[j],w-10,8,st.bold?FB:F), col=(j===cols.length-1&&st.statusColor)?st.statusColor:INK;
         al==="r"?textR(v,x+w-5,y-10.5,{size:8,bold:st.bold,color:col}):text(v,x+5,y-10.5,{size:8,bold:st.bold,color:col}); x+=w; });
       page.drawLine({start:{x:TX,y:y-rh},end:{x:TX+cols.reduce((a,c)=>a+c[1],0),y:y-rh},thickness:0.5,color:LINE}); y-=rh; });
@@ -1103,7 +1364,8 @@ const drop=$("drop");
 ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
 ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
 drop.addEventListener("drop",e=>handleFile(e.dataTransfer.files[0]));
-["ltype","orient","farside","lbl","opnames","secgap","flags"].forEach(id=>$(id).addEventListener("change",render));
+$("hstyle").addEventListener("change",e=>{ HV={...HV_PRESETS[e.target.value]}; render(); });
+["linesys","ltype","orient","farside","lbl","opnames","secgap","flags"].forEach(id=>$(id).addEventListener("change",render));
 $("animchk").checked=animOn;
 $("animchk").addEventListener("change",e=>{ animOn=e.target.checked; const w=$("lwrap"), sv=w.querySelector("svg"); w.classList.toggle("anim",animOn); try{ animOn?sv.unpauseAnimations():sv.pauseAnimations(); }catch(_){} });
 ["target","hours","eff"].forEach(id=>$(id).addEventListener("input",()=>{ if($(id).value!=="") render(); }));
