@@ -1243,10 +1243,10 @@ async function buildPdfBytes(){
   page.drawImage(cimg,{x:M,y:y-chh,width:cwid,height:chh}); y-=chh+20;
   // operation breakdown
   need(150); heading("Operation breakdown");
-  const ocols=[["Op",36,"r"],["Section",86,"l"],["Operation",300,"l"],["M/C",56,"l"],["SMV",62,"r"],["Operators",70,"r"],["Helpers",60,"r"],["Machines",64,"r"],["Cycle",62,"r"],["Cap/h",64,"r"],["Load %",64,"r"]];
-  const orows=R.ops.map(o=>[o.no,o.section,o.name,o.code,o.smv.toFixed(2),o.operators+(o.autoOps?"*":""),o.helpers||"",o.machines,isFinite(o.cycle)?o.cycle.toFixed(3):"-",Math.floor(o.cap),Math.round(o.load*100)]);
+  const ocols=[["Op",36,"r"],["Section",86,"l"],["Operation",300,"l"],["M/C",56,"l"],["SMV",62,"r"],["Operators",70,"r"],["Helpers",60,"r"],["Machines",64,"r"],["Cycle",70,"r"],["Cap/h",70,"r"]];
+  const orows=R.ops.map(o=>[o.no,o.section,o.name,o.code,o.smv.toFixed(2),o.operators+(o.autoOps?"*":""),o.helpers||"",o.machines,isFinite(o.cycle)?o.cycle.toFixed(3):"-",Math.floor(o.cap)]);
   drawTable(ocols,orows,()=>({}));
-  need(30); text("Required cycle = takt time x planned efficiency. * = operators allocated automatically.",M,y-10,{size:7.5,color:INK3});
+  need(30); text("Cycle = SMV per operator (min). Cap/h = pieces per hour at 100%. * = operators allocated automatically.",M,y-10,{size:7.5,color:INK3});
 
   function drawTable(cols,rows,style){
     const rh=15, head=()=>{ need(rh*2); let x=TX; page.drawRectangle({x:TX,y:y-rh,width:cols.reduce((a,c)=>a+c[1],0),height:rh,color:hex("#1f3a5f")});
