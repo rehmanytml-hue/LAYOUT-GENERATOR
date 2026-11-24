@@ -799,7 +799,8 @@ function drawKPIs(R){
   const I=data.info, k=[
     ["Total SMV",fmt(R.totalSMV,2),"min per garment"],
     ["Takt time",fmt(R.takt,3),`required cycle ${fmt(R.req,3)} min`],
-    ["Operators",R.totalOps,`theoretical ${fmt(R.theoMP,1)}${R.totalHelpers?` · +${R.totalHelpers} helper${R.totalHelpers>1?"s":""}`:""}`, R.totalOps<R.theoMP*0.97],
+    ["Operators",R.totalOps,`theoretical ${fmt(R.theoMP,1)}`, R.totalOps<R.theoMP*0.97],
+    ["Total manpower",R.totalOps+R.totalHelpers,`${R.totalOps} operators + ${R.totalHelpers} helper${R.totalHelpers===1?"":"s"}`],
     ["Machines",R.totalMc,`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
     ["Bottleneck",fmt(R.bnCycle,3),R.bn.length>1?`${R.bn.length} ops tie: Op ${R.bn.slice(0,3).map(o=>o.no).join(", ")}${R.bn.length>3?"…":""}`:`Op ${R.bn[0].no} – ${esc(R.bn[0].name)}`, R.bnCycle>R.req],
     ["Line balance",fmt(R.balEff*100,1)+"%","SMV ÷ (operators × BN cycle)"],
@@ -912,7 +913,7 @@ function buildVsdxParts(R){
   // title block
   const bn=R.bn.map(o=>o.no).join(", ");
   out.push(text(AX(20),AY(48),AX(Wpx-40),AX(34),`${I.lineName||"Line layout"}${I.style?" – "+I.style:""}${I.buyer?" · "+I.buyer:""}`,{pt:16,bold:true,align:0,name:"Title"}));
-  out.push(text(AX(20),AY(80),AX(Wpx-40),AX(28),`${$("linesys").selectedOptions[0].text} · ${type} layout · ${$("orient").selectedOptions[0].text} · Target ${I.target} pcs/day · ${I.hours} h · Eff ${Math.round(I.eff*100)}% · Total SMV ${R.totalSMV.toFixed(2)} · Takt ${R.takt.toFixed(3)} min · Operators ${R.totalOps} · Machines ${R.totalMc}`,{pt:9,align:0,color:"#52514E",name:"Summary"}));
+  out.push(text(AX(20),AY(80),AX(Wpx-40),AX(28),`${$("linesys").selectedOptions[0].text} · ${type} layout · ${$("orient").selectedOptions[0].text} · Target ${I.target} pcs/day · ${I.hours} h · Eff ${Math.round(I.eff*100)}% · Total SMV ${R.totalSMV.toFixed(2)} · Takt ${R.takt.toFixed(3)} min · Operators ${R.totalOps} · Helpers ${R.totalHelpers} · Total manpower ${R.totalOps+R.totalHelpers} · Machines ${R.totalMc}`,{pt:9,align:0,color:"#52514E",name:"Summary"}));
   const T=y=>TOP+y; // layout px y → page px y
   // work table
   const tabX1=LM-50, tabX2=LM+maxX+($("linesys").value==="hanger"?60:50);
@@ -1235,7 +1236,7 @@ async function buildPdfBytes(){
   }
   need(100); heading("Line summary",hc("Line summary"));
   const k=[["Total SMV",R.totalSMV.toFixed(2),"min per garment"],["Takt time",R.takt.toFixed(3),"min per piece"],
-    ["Operators",String(R.totalOps),R.totalHelpers?`+ ${R.totalHelpers} helper${R.totalHelpers>1?"s":""}`:"on the line"],["Machines",String(R.totalMc),`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
+    ["Operators",String(R.totalOps),"on the line"],["Total manpower",String(R.totalOps+R.totalHelpers),`${R.totalOps} operators + ${R.totalHelpers} helper${R.totalHelpers===1?"":"s"}`],["Machines",String(R.totalMc),`${new Set(R.ops.filter(o=>o.machines>0).map(o=>o.code)).size} machine types`],
     ["Target output",String(I.target),`pcs/day · ${Math.round(I.target/I.hours)} pcs/h`],["Efficiency",Math.round(I.eff*100)+"%","planned line efficiency"]];
   need(64);
   const kw=(legW-(k.length-1)*8)/k.length;
