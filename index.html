@@ -298,6 +298,10 @@ const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">"
 const fmt = (v,d=2)=> (v==null||!isFinite(v))?"–":Number(v).toFixed(d);
 
 /* ---------------- Excel parsing ---------------- */
+const normCode = v => String(v??"").trim().replace(/\s+/g," ").toUpperCase();
+// common machine names, used when the Excel file gives no description
+const KNOWN_MC={SNLS:"Single Needle Lock Stitch",DNLS:"Double Needle Lock Stitch",OL:"Overlock",OL3:"3-Thread Overlock",OL4:"4-Thread Overlock",OL5:"5-Thread Overlock (safety)","3TH O/L":"3-Thread Overlock","4TH O/L":"4-Thread Overlock","5TH O/L":"5-Thread Overlock (safety)",SAFETY:"Safety Stitch (5-thread overlock)",FL:"Flatlock",CS:"Coverstitch",KANSAI:"Kansai Multi-needle",FOA:"Feed-off-the-Arm",BARTACK:"Bartack",BT:"Bartack",BH:"Buttonhole",BS:"Button Stitch",EYELET:"Eyelet Buttonhole",SNAP:"Snap Button Attach",FUS:"Fusing Machine",IRON:"Iron / Pressing Table",MAN:"Manual Table",MANUAL:"Manual Table",ZZ:"Zigzag","MH-380":"Multi-needle Chainstitch (MH-380)",CHAIN:"Chainstitch",PICOT:"Picot"};
+const mcDesc = cd => { const m=data.machines.find(x=>x.code===cd); return (m&&m.desc) || KNOWN_MC[cd] || KNOWN_MC[cd.replace(/\s+/g,"")] || ""; };
 function findSheet(wb, re){ return wb.SheetNames.find(n=>re.test(n.toLowerCase())); }
 function rowsOf(ws){ return XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,blankrows:false}); }
 const norm = s => String(s??"").trim().toLowerCase().replace(/\s+/g," ");
@@ -335,7 +339,7 @@ function parseWorkbook(wb){
       no: c.no>=0 && r[c.no]!=null ? r[c.no] : out.ops.length+1,
       section: (c.section>=0 && r[c.section]) ? String(r[c.section]).trim() : "Line",
       name: name ? String(name).trim() : `Operation ${out.ops.length+1}`,
-      code: (c.code>=0 && r[c.code]) ? String(r[c.code]).trim().toUpperCase() : "SNLS",
+      code: (c.code>=0 && r[c.code]) ? normCode(r[c.code]) : "SNLS",
       smv, operators: c.ops>=0 ? num(r[c.ops]) : null, machines: c.mc>=0 ? num(r[c.mc]) : null, helpers: c.hlp>=0 ? Math.max(0,Math.round(num(r[c.hlp])||0)) : 0,
       remarks: c.rem>=0 && r[c.rem] ? String(r[c.rem]) : ""
     });
@@ -362,27 +366,39 @@ function parseWorkbook(wb){
   // Machine master
   const mmName = findSheet(wb,/machine/);
   if(mmName && mmName!==opName){
-    const mr = rowsOf(wb.Sheets[mmName]); const h = (mr[0]||[]).map(norm);
-    const ci = t=>h.findIndex(t);
-    const cc=ci(x=>/code|type/.test(x)), cd=ci(x=>/desc|name/.test(x)), ck=ci(x=>/categ/.test(x)), cl=ci(x=>/colou?r/.test(x));
-    mr.slice(1).forEach(r=>{ const code = r[cc>=0?cc:0]; if(!code) return;
-      out.machines.push({code:String(code).trim().toUpperCase(),desc:cd>=0?String(r[cd]??""):"",cat:ck>=0?String(r[ck]??""):"",color:cl>=0&&r[cl]?String(r[cl]).trim():""}); });
+    const mr = rowsOf(wb.Sheets[mmName]);
+    const hi = Math.max(0, mr.findIndex(r=>(r||[]).some(c=>/code|machine|type/.test(norm(c)))));
+    const h = (mr[hi]||[]).map(norm), ci = t=>h.findIndex(t);
+    let cc=ci(x=>/code/.test(x)); if(cc<0) cc=ci(x=>/type|machine/.test(x)); if(cc<0) cc=0;
+    const cd=h.findIndex((x,i)=>i!==cc && /desc|name|type/.test(x)), ck=ci(x=>/categ/.test(x)), cl=ci(x=>/colou?r/.test(x)), cq=ci(x=>/avail|qty|quantity|count|no\.? of|stock|in hand/.test(x));
+    const byCode=new Map();
+    mr.slice(hi+1).forEach(r=>{ const code=normCode(r[cc]); if(!code) return;
+      const rec={code,desc:cd>=0?String(r[cd]??"").trim():"",cat:ck>=0?String(r[ck]??"").trim():"",color:cl>=0&&r[cl]?String(r[cl]).trim():"",avail:cq>=0?num(r[cq]):null};
+      const ex=byCode.get(code);
+      if(!ex) byCode.set(code,rec);
+      else { // the same machine listed again: keep one entry, fill gaps, add up quantities
+        if(!ex.desc) ex.desc=rec.desc; if(!ex.cat) ex.cat=rec.cat; if(!ex.color) ex.color=rec.color;
+        if(rec.avail!=null) ex.avail=(ex.avail||0)+rec.avail; }
+    });
+    out.machines.push(...byCode.values());
   }
   const known = new Set(out.machines.map(m=>m.code));
   const missing = [...new Set(out.ops.map(o=>o.code))].filter(cd=>!known.has(cd));
-  missing.forEach(cd=>out.machines.push({code:cd,desc:"",cat:/^(MAN|MANUAL|HELPER|TABLE)$/.test(cd)?"Manual":"",color:""}));
+  missing.forEach(cd=>out.machines.push({code:cd,desc:"",cat:/^(MAN|MANUAL|HELPER|TABLE)$/.test(cd)?"Manual":"",color:"",avail:null}));
   if(missing.length && out.machines.length>missing.length) warn.push(`Machine codes not in Machine_Master: ${missing.join(", ")}.`);
   return {data:out,warn};
 }
 
 /* ---------------- calculations ---------------- */
+// machines the Excel file says are on hand (Machine_Master quantity column), or null
+const mcAvail = cd => { const m=data.machines.find(x=>x.code===cd); return m && m.avail!=null ? m.avail : null; };
 function isManual(code){ const m=data.machines.find(x=>x.code===code); return (m && /manual/i.test(m.cat)) || /^(MAN|MANUAL|HELPER|TABLE)$/.test(code); }
 function compute(){
   const I=data.info, avail=I.hours*60, takt=avail/I.target, req=takt*I.eff;
   const ops = data.ops.map(o=>{
     const autoOps = o.operators==null || o.operators==="";
     const operators = autoOps ? Math.max(1,Math.round(o.smv/req)) : Math.max(0,o.operators);
-    const machines = (o.machines==null||o.machines==="") ? (isManual(o.code)?0:operators) : Math.max(0,o.machines);
+    const machines = isManual(o.code) ? 0 : (o.machines==null||o.machines==="") ? operators : Math.max(0,o.machines);
     const cycle = operators>0 ? o.smv/operators : Infinity;
     return {...o, operators, machines, autoOps, cycle, cap: operators>0? operators*60/o.smv : 0, load: cycle/req, theo:o.smv/req};
   });
@@ -398,7 +414,7 @@ function compute(){
 function colorMap(){
   const slots=["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"], map={}; let k=0;
   const used = [...new Set(data.ops.map(o=>o.code))];
-  const order = [...data.machines.map(m=>m.code).filter(c=>used.includes(c)), ...used.filter(c=>!data.machines.some(m=>m.code===c))];
+  const order = [...new Set([...data.machines.map(m=>m.code).filter(c=>used.includes(c)), ...used.filter(c=>!data.machines.some(m=>m.code===c))])];
   order.forEach(cd=>{
     const m = data.machines.find(x=>x.code===cd);
     if(m && /^#[0-9a-f]{3,8}$/i.test(m.color)) map[cd]=m.color;
@@ -752,7 +768,7 @@ function drawLayout(R,opt={}){
   const {order}=colorMap();
   let lg = order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const c=map[cd];
     const n=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0);
-    return `<span><i class="sw" style="border-color:${c};background:color-mix(in srgb, ${c} 20%, transparent)"></i><b class="mono">${esc(cd)}</b> ${esc(m?.desc||"")} ${n?`(${n})`:""}</span>`; }).join("");
+    return `<span><i class="sw" style="border-color:${c};background:color-mix(in srgb, ${c} 20%, transparent)"></i><b class="mono">${esc(cd)}</b> ${esc(mcDesc(cd))} ${n?`(${n})`:""}</span>`; }).join("");
   lg += `<span><svg width="22" height="22" viewBox="-12 -18 24 32"><g>${operatorArt("var(--shirt)",true,0)}</g></svg>Operator</span>`;
   if(R.totalHelpers) lg += `<span><svg width="22" height="22" viewBox="-12 -18 24 32"><g>${operatorArt("var(--helper)",true,0)}</g></svg>Helper (faces the operator)</span>`;
   lg += $("linesys").value==="hanger" ? `<span><svg width="22" height="16"><rect x="1" y="1" width="20" height="14" rx="2" fill="var(--chip)"/><text x="11" y="7" text-anchor="middle" font-size="5.5" font-weight="700" fill="var(--chip-ink)">07</text><text x="11" y="13.5" text-anchor="middle" font-size="6" font-weight="700" fill="var(--chip-ink)">05</text></svg>Line / station number</span><span><svg width="24" height="12"><path d="M3 6h16m-5-4l5 4l-5 4" fill="none" stroke="var(--amber)" stroke-width="2"/></svg>Pieces in / out</span>` : `<span><svg width="20" height="16" viewBox="-9 -7 18 14">${BUNDLE}</svg>Garment bundle</span>`;
@@ -815,11 +831,12 @@ function drawTables(R){
   t+=`</tbody>`; $("optable").innerHTML=t;
   const by={}; R.ops.forEach(o=>{ (by[o.code] ||= {mc:0,op:0,smv:0}); by[o.code].mc+=o.machines; by[o.code].op+=o.operators; by[o.code].smv+=o.smv; });
   const {map,order}=colorMap();
-  let m=`<thead><tr><th>Code</th><th>Description</th><th class="n">Machines</th><th class="n">Operators</th></tr></thead><tbody>`;
+  const hasAv=order.some(cd=>by[cd]&&mcAvail(cd)!=null);
+  let m=`<thead><tr><th>Code</th><th>Description</th><th class="n">Machines</th>${hasAv?'<th class="n">Available</th>':""}<th class="n">Operators</th></tr></thead><tbody>`;
   order.forEach(cd=>{ const d=data.machines.find(x=>x.code===cd); const b=by[cd]; if(!b) return;
-    m+=`<tr><td><i class="sw" style="border-color:${map[cd]};width:10px;height:10px;vertical-align:-1px;margin-right:6px"></i><span class="mono">${esc(cd)}</span></td><td>${esc(d?.desc||"")}</td><td class="n">${b.mc}</td><td class="n">${b.op}</td></tr>`; });
-  if(R.totalHelpers) m+=`<tr><td><i class="sw" style="border-color:var(--ink-3);border-style:dashed;width:10px;height:10px;vertical-align:-1px;margin-right:6px"></i><span class="mono">HLP</span></td><td>Helpers (no machine)</td><td class="n">0</td><td class="n">${R.totalHelpers}</td></tr>`;
-  m+=`<tr><td><b>Total</b></td><td></td><td class="n"><b>${R.totalMc}</b></td><td class="n"><b>${R.totalOps+R.totalHelpers}</b></td></tr></tbody>`;
+    m+=`<tr><td><i class="sw" style="border-color:${map[cd]};width:10px;height:10px;vertical-align:-1px;margin-right:6px"></i><span class="mono">${esc(cd)}</span></td><td>${esc(mcDesc(cd))}</td><td class="n">${b.mc}</td>${hasAv?(()=>{const a=mcAvail(cd); return `<td class="n"${a!=null&&a<b.mc?' style="color:var(--crit);font-weight:600"':""}>${a==null?"–":a}${a!=null&&a<b.mc?` (short ${b.mc-a})`:""}</td>`;})():""}<td class="n">${b.op}</td></tr>`; });
+  if(R.totalHelpers) m+=`<tr><td><i class="sw" style="border-color:var(--ink-3);border-style:dashed;width:10px;height:10px;vertical-align:-1px;margin-right:6px"></i><span class="mono">HLP</span></td><td>Helpers (no machine)</td><td class="n">0</td>${hasAv?"<td></td>":""}<td class="n">${R.totalHelpers}</td></tr>`;
+  m+=`<tr><td><b>Total</b></td><td></td><td class="n"><b>${R.totalMc}</b></td>${hasAv?`<td class="n"><b>${order.filter(cd=>by[cd]).reduce((a,cd)=>a+(mcAvail(cd)||0),0)}</b></td>`:""}<td class="n"><b>${R.totalOps+R.totalHelpers}</b></td></tr></tbody>`;
   $("mtable").innerHTML=m;
 }
 function drawDetail(R){
@@ -1075,7 +1092,7 @@ function buildVsdxParts(R){
   const ly0=TOP+layoutH+16;
   out.push(text(AX(20),AY(ly0+18),AX(300),AX(18),"Legend",{pt:10,bold:true,align:0}));
   const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const n=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0);
-    return {fill:toHex(map[cd]),line:toHex(map[cd]),trans:0.78,t:`${cd} – ${m?.desc||""}${n?` (${n})`:""}`}; });
+    return {fill:toHex(map[cd]),line:toHex(map[cd]),trans:0.78,t:`${cd} – ${mcDesc(cd)}${n?` (${n})`:""}`}; });
   items.push({fill:"#52514E",line:"#FFFFFF",ell:true,t:"Operator"},...(R.ops.some(o=>isManual(o.code)&&manualType(o)==="check")?[{fill:"#E7F3EE",line:"#3F8F6F",dash:true,t:"Checking table"}]:[]),...(R.ops.some(o=>isManual(o.code)&&manualType(o)==="cutmark")?[{fill:"#F1F4EA",line:"#7C9A5C",dash:true,t:"Marking / cutting table"}]:[]),...(R.totalHelpers?[{fill:"#5F7A3A",line:"#FFFFFF",ell:true,t:"Helper (faces the operator)"}]:[]),{fill:"#F0EFEC",line:"#8A8983",dash:true,t:"Manual / helper table"});
   items.forEach((it,i)=>{ const cx=20+(i%perRow)*300, cy=ly0+30+Math.floor(i/perRow)*30;
     out.push(shape({name:"Legend key",x:AX(cx),y:AY(cy+16),w:AX(22),h:AX(16),fill:it.fill,trans:it.trans||0,noFill:it.noFill,line:it.line,lw:1.25,dash:it.dash,ellipse:it.ell,round:it.ell?0:AX(3)}));
@@ -1224,7 +1241,7 @@ async function buildPdfBytes(){
   const widest=Math.max(...cuts.slice(1).map((c,i)=>c-cuts[i]));
   const sc=Math.min(AW/widest, mode==='strips'?1.2:1.5), stripH=L.h*sc;
   // legend set-up first: it sits centred under the layout, as wide as the layout
-  const {map,order}=colorMap(); const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const cnt=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0); return [toHex(map[cd]),`${cd}  ${m?.desc||""}${cnt?` (${cnt})`:""}`]; });
+  const {map,order}=colorMap(); const items=order.map(cd=>{ const m=data.machines.find(x=>x.code===cd); const cnt=R.ops.filter(o=>o.code===cd).reduce((a,o)=>a+o.machines,0); return [toHex(map[cd]),`${cd}  ${mcDesc(cd)}${cnt?` (${cnt})`:""}`]; });
   items.push(...($("linesys").value==="hanger"?[["#1e3a5f","Line / station number"]]:[]),["#3e4a5c","Operator"],...(R.ops.some(o=>isManual(o.code)&&manualType(o)==="check")?[["#e7f3ee","Checking table"]]:[]),...(R.ops.some(o=>isManual(o.code)&&manualType(o)==="cutmark")?[["#f1f4ea","Marking / cutting table"]]:[]),...(R.totalHelpers?[["#5f7a3a","Helper (faces the operator)"]]:[]),["#efeee9","Manual / helper table"]);
   const legW=Math.min(AW,Math.max(widest*sc,640)), legX=M+(AW-legW)/2, per=Math.max(3,Math.floor(legW/270)), cw=legW/per, legRows=Math.ceil(items.length/per), legH=18+legRows*16;
   // page 1: every block centred on the page; whole-line modes also share the spare height evenly above and below
@@ -1268,11 +1285,12 @@ async function buildPdfBytes(){
 
   need(80); heading("Machine requirement",hc("Machine requirement"));
   const by={}; R.ops.forEach(o=>{ (by[o.code] ||= {mc:0,op:0,smv:0}); by[o.code].mc+=o.machines; by[o.code].op+=o.operators; by[o.code].smv+=o.smv; });
-  const mcols=[["Code",70,"l"],["Description",300,"l"],["Machines",90,"r"],["Operators",90,"r"]];
-  const mrows=order.filter(cd=>by[cd]).map(cd=>[cd,data.machines.find(x=>x.code===cd)?.desc||"",by[cd].mc,by[cd].op]);
-  if(R.totalHelpers) mrows.push(["HLP","Helpers (no machine)",0,R.totalHelpers]);
-  mrows.push(["Total","",R.totalMc,R.totalOps+R.totalHelpers]);
-  TX=M+(AW-mTableW)/2; drawTable(mcols,mrows,(r,i)=>i===mrows.length-1?{bold:true}:{}); TX=M;
+  const hasAv=order.some(cd=>by[cd]&&mcAvail(cd)!=null);
+  const mcols=[["Code",70,"l"],["Description",300,"l"],["Machines",90,"r"],["Operators",90,"r"],...(hasAv?[["Available",110,"r"]]:[])];
+  const mrows=order.filter(cd=>by[cd]).map(cd=>{ const a=mcAvail(cd); return [cd,mcDesc(cd),by[cd].mc,by[cd].op,...(hasAv?[a==null?"-":(a<by[cd].mc?`${a} (short ${by[cd].mc-a})`:a)]:[])]; });
+  if(R.totalHelpers) mrows.push(["HLP","Helpers (no machine)",0,R.totalHelpers,...(hasAv?[""]:[])]);
+  mrows.push(["Total","",R.totalMc,R.totalOps+R.totalHelpers,...(hasAv?[order.filter(cd=>by[cd]).reduce((a,cd)=>a+(mcAvail(cd)||0),0)]:[])]);
+  TX=M+(AW-mTableW-(hasAv?110:0))/2; drawTable(mcols,mrows,(r,i)=>i===mrows.length-1?{bold:true}:(hasAv&&/short/.test(String(r[4]))?{statusColor:CRIT}:{})); TX=M;
 
   // further pages: balance chart, then the operation breakdown
   newPage();
